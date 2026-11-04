@@ -41,6 +41,14 @@ const userSchema = new mongoose.Schema(
       default: 'Team Member',
       trim: true,
     },
+    memberId: {
+      type: String,
+      unique: true,
+      uppercase: true,
+      trim: true,
+      sparse: true,
+      index: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -54,6 +62,14 @@ const userSchema = new mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Auto-generate memberId if not set
+userSchema.pre('validate', function (next) {
+  if (!this.memberId) {
+    this.memberId = `WH-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  }
+  next();
+});
 
 // Method to verify password
 userSchema.methods.comparePassword = async function (candidatePassword) {

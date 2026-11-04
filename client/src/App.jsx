@@ -30,6 +30,7 @@ import WorkspaceDailyStandupsPage from './pages/workspaces/WorkspaceDailyStandup
 import WorkspaceCalendarPage from './pages/workspaces/WorkspaceCalendarPage';
 import WorkspaceReportsPage from './pages/workspaces/WorkspaceReportsPage';
 import WorkspaceMembersPage from './pages/workspaces/WorkspaceMembersPage';
+import JoinWorkspacePage from './pages/workspaces/JoinWorkspacePage';
 
 // Team Pages
 import TeamListPage from './pages/teams/TeamListPage';
@@ -77,6 +78,7 @@ export default function App() {
               <Route path="/" element={<RootRedirect />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
+              <Route path="/join-workspace/:codeOrId" element={<JoinWorkspacePage />} />
 
               {/* Protected Application Routes */}
               <Route path="/app" element={<AppLayout />}>
@@ -90,6 +92,7 @@ export default function App() {
 
                 {/* Workspace Routes */}
                 <Route path="workspaces" element={<WorkspaceListPage />} />
+                <Route path="workspaces/join/:codeOrId" element={<JoinWorkspacePage />} />
                 <Route path="workspaces/:workspaceId" element={<WorkspaceLayout />}>
                   <Route index element={<Navigate to="overview" replace />} />
                   <Route path="overview" element={<WorkspaceOverviewPage />} />

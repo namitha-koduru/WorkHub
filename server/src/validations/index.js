@@ -64,8 +64,18 @@ export const updateWorkspaceSchema = z.object({
 });
 
 export const addWorkspaceMemberSchema = z.object({
-  userId: z.string().min(1, 'User ID is required'),
+  userId: z.string().optional(),
+  memberId: z.string().optional(),
+  identifier: z.string().optional(),
   role: z.enum(WORKSPACE_ROLES).default('WORKSPACE_MEMBER'),
+});
+
+export const submitJoinRequestSchema = z.object({
+  message: z.string().max(500).optional(),
+});
+
+export const decideJoinRequestSchema = z.object({
+  status: z.enum(['APPROVED', 'REJECTED']),
 });
 
 // Team Validations (NEW)

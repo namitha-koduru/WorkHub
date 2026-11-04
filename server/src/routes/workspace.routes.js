@@ -9,6 +9,11 @@ import {
   addWorkspaceMember,
   removeWorkspaceMember,
   getWorkspaceCalendar,
+  searchWorkspaces,
+  getWorkspaceByCodeOrId,
+  submitJoinRequest,
+  getWorkspaceJoinRequests,
+  decideWorkspaceJoinRequest,
 } from '../controllers/workspace.controller.js';
 import { authenticate } from '../middleware/auth.js';
 import { requireOrgRole, requireWorkspaceAccess } from '../middleware/rbac.js';
@@ -17,12 +22,18 @@ import {
   createWorkspaceSchema,
   updateWorkspaceSchema,
   addWorkspaceMemberSchema,
+  submitJoinRequestSchema,
+  decideJoinRequestSchema,
 } from '../validations/index.js';
 import { ROLES } from '../constants/roles.js';
 
 const router = Router();
 
 router.use(authenticate);
+
+// Search & Discover Workspaces (placed before :workspaceId)
+router.get('/search', searchWorkspaces);
+router.get('/invite/:codeOrId', getWorkspaceByCodeOrId);
 
 router.post(
   '/',
@@ -46,6 +57,7 @@ router.put(
   archiveWorkspace
 );
 
+// Member Management
 router.get('/:workspaceId/members', requireWorkspaceAccess(), getWorkspaceMembers);
 router.post(
   '/:workspaceId/members',
@@ -59,7 +71,25 @@ router.delete(
   removeWorkspaceMember
 );
 
+// Join Requests Management
+router.post(
+  '/:workspaceId/join-request',
+  validate(submitJoinRequestSchema),
+  submitJoinRequest
+);
+router.get(
+  '/:workspaceId/join-requests',
+  requireWorkspaceAccess([ROLES.WORKSPACE_MANAGER]),
+  getWorkspaceJoinRequests
+);
+router.patch(
+  '/:workspaceId/join-requests/:requestId',
+  requireWorkspaceAccess([ROLES.WORKSPACE_MANAGER]),
+  validate(decideJoinRequestSchema),
+  decideWorkspaceJoinRequest
+);
+
+// Calendar
 router.get('/:workspaceId/calendar', requireWorkspaceAccess(), getWorkspaceCalendar);
 
 export default router;
-

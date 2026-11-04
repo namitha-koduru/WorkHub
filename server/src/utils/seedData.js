@@ -54,6 +54,7 @@ export const seedDatabase = async () => {
     {
       name: 'Dr. Ramesh Kumar',
       email: 'admin@workhub.com',
+      memberId: 'WH-ADM001',
       passwordHash: defaultPasswordHash,
       title: 'Dean & Fest Convener',
       avatarUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
@@ -61,6 +62,7 @@ export const seedDatabase = async () => {
     {
       name: 'Priya Sharma',
       email: 'manager@workhub.com',
+      memberId: 'WH-MGR002',
       passwordHash: defaultPasswordHash,
       title: 'Operations Director',
       avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
@@ -68,6 +70,7 @@ export const seedDatabase = async () => {
     {
       name: 'Aditya Verma',
       email: 'leader@workhub.com',
+      memberId: 'WH-TLD003',
       passwordHash: defaultPasswordHash,
       title: 'Technical Team Lead',
       avatarUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
@@ -75,6 +78,7 @@ export const seedDatabase = async () => {
     {
       name: 'Sneha Patel',
       email: 'member1@workhub.com',
+      memberId: 'WH-DEV004',
       passwordHash: defaultPasswordHash,
       title: 'Full Stack & Media Lead',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
@@ -82,6 +86,7 @@ export const seedDatabase = async () => {
     {
       name: 'Vikram Singh',
       email: 'member2@workhub.com',
+      memberId: 'WH-LOG005',
       passwordHash: defaultPasswordHash,
       title: 'Logistics Coordinator',
       avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
@@ -112,6 +117,7 @@ export const seedDatabase = async () => {
     organizationId: org._id,
     name: 'Vignan Mahotsav 2027',
     slug: 'vignan-mahotsav-2027',
+    inviteCode: 'MAHOTSAV27',
     description: 'Annual National Cultural and Technical Festival coordinating 20,000+ delegates across 40 universities.',
     category: 'Cultural & Tech Fest',
     status: 'ACTIVE',
@@ -123,6 +129,7 @@ export const seedDatabase = async () => {
     organizationId: org._id,
     name: 'Technical Symposium',
     slug: 'technical-symposium',
+    inviteCode: 'SYMPOSIUM27',
     description: 'Inter-collegiate paper presentations, robotics challenges, and hackathon.',
     category: 'Academic Symposium',
     status: 'ACTIVE',

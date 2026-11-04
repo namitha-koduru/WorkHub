@@ -12,6 +12,9 @@ import {
   PlusCircle,
   Wifi,
   Sparkles,
+  Copy,
+  Check,
+  Hash,
 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
@@ -20,9 +23,18 @@ export function Header({ onToggleSidebar }) {
   const { isConnected } = useSocket();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [orgMenuOpen, setOrgMenuOpen] = useState(false);
+  const [copiedId, setCopiedId] = useState(false);
   const userMenuRef = useRef(null);
   const orgMenuRef = useRef(null);
   const navigate = useNavigate();
+
+  const handleCopyMemberId = (e) => {
+    e.stopPropagation();
+    if (!user?.memberId) return;
+    navigator.clipboard.writeText(user.memberId);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -130,6 +142,24 @@ export function Header({ onToggleSidebar }) {
               <div className="px-3 py-2 border-b border-slate-100 mb-1">
                 <p className="text-xs font-semibold text-slate-900 truncate">{user?.name}</p>
                 <p className="text-[11px] text-slate-500 truncate">{user?.email}</p>
+                {user?.memberId && (
+                  <div className="mt-1.5 flex items-center justify-between bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                    <span className="font-mono text-[10px] font-bold text-indigo-700">
+                      ID: {user.memberId}
+                    </span>
+                    <button
+                      onClick={handleCopyMemberId}
+                      className="text-slate-400 hover:text-indigo-600 transition-colors p-0.5"
+                      title="Copy Member ID"
+                    >
+                      {copiedId ? (
+                        <Check className="h-3 w-3 text-emerald-600" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
               <Link
                 to="/app/settings"

@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/auth.api';
 import { Button } from '../../components/common/Button';
-import {
-  LogIn,
-  AlertCircle,
-  ShieldCheck,
-  Briefcase,
-  Users,
-  Code,
-  Sparkles,
-} from 'lucide-react';
+import { LogIn, AlertCircle } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -20,6 +12,9 @@ export default function Login() {
   const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectPath = new URLSearchParams(location.search).get('redirect') || '/app/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,28 +25,10 @@ export default function Login() {
       const res = await authApi.login({ email, password });
       if (res.success && res.data) {
         login(res.data.user, res.data.activeOrg);
-        navigate('/app/dashboard');
+        navigate(redirectPath);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Invalid email or password.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleQuickLogin = async (demoEmail) => {
-    setEmail(demoEmail);
-    setPassword('Password123!');
-    setIsLoading(true);
-    setErrorMsg('');
-    try {
-      const res = await authApi.login({ email: demoEmail, password: 'Password123!' });
-      if (res.success && res.data) {
-        login(res.data.user, res.data.activeOrg);
-        navigate('/app/dashboard');
-      }
-    } catch (err) {
-      setErrorMsg(err.message || 'Quick login failed.');
     } finally {
       setIsLoading(false);
     }
@@ -111,73 +88,16 @@ export default function Login() {
 
             <Button
               type="submit"
-              isLoading={isLoading}
-              className="w-full py-2.5 mt-2"
-              icon={LogIn}
+              className="w-full mt-2"
+              size="md"
+              loading={isLoading}
             >
+              <LogIn className="h-4 w-4 mr-2" />
               Sign In
             </Button>
           </form>
 
-          {/* Quick Demo Access Buttons */}
-          <div className="mt-6 pt-6 border-t border-slate-100">
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-3">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
-              One-Click Role Demonstration
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-left">
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('admin@workhub.com')}
-                className="p-2 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-xs"
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                  <ShieldCheck className="h-3.5 w-3.5 text-indigo-600" />
-                  Org Owner
-                </div>
-                <span className="text-[10px] text-slate-500 truncate block">Dr. Ramesh Kumar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('manager@workhub.com')}
-                className="p-2 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-xs"
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                  <Briefcase className="h-3.5 w-3.5 text-blue-600" />
-                  WS Manager
-                </div>
-                <span className="text-[10px] text-slate-500 truncate block">Priya Sharma</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('leader@workhub.com')}
-                className="p-2 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-xs"
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                  <Users className="h-3.5 w-3.5 text-amber-600" />
-                  Room Leader
-                </div>
-                <span className="text-[10px] text-slate-500 truncate block">Aditya Verma</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleQuickLogin('member1@workhub.com')}
-                className="p-2 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/50 transition-all text-xs"
-              >
-                <div className="flex items-center gap-1.5 font-semibold text-slate-800">
-                  <Code className="h-3.5 w-3.5 text-emerald-600" />
-                  Team Member
-                </div>
-                <span className="text-[10px] text-slate-500 truncate block">Sneha Patel</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-6 text-center text-xs text-slate-500">
+          <div className="mt-6 text-center text-xs text-slate-500 border-t border-slate-100 pt-6">
             Don't have an account?{' '}
             <Link to="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
               Create an account
@@ -188,4 +108,3 @@ export default function Login() {
     </div>
   );
 }
-

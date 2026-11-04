@@ -346,3 +346,136 @@ test('17. Comments: Post team-level and task-level discussions', async () => {
   assert.equal(teamCommentRes.status, 201);
   assert.ok(teamCommentData.data._id);
 });
+
+test('18. Workspace Onboarding: Search Workspaces', async () => {
+  const res = await fetch(`${baseUrl}/workspaces/search?q=Mahotsav`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const data = await res.json();
+  assert.equal(res.status, 200);
+  assert.equal(data.success, true);
+  assert.ok(Array.isArray(data.data));
+  assert.ok(data.data.length > 0);
+  assert.ok(data.data[0].inviteCode);
+  assert.equal(data.data[0].isMember, true);
+});
+
+test('19. Workspace Onboarding: Invite Link & Join Request Flow', async () => {
+  // 1. Register a new prospective user
+  const regRes = await fetch(`${baseUrl}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Priya Sharma',
+      email: `priya_${Date.now()}@example.com`,
+      password: 'Password123!',
+      title: 'Hospitality Executive',
+    }),
+  });
+  const regData = await regRes.json();
+  assert.equal(regRes.status, 201);
+  assert.ok(regData.data.token);
+  assert.ok(regData.data.user.memberId);
+  const priyaToken = regData.data.token;
+  const priyaMemberId = regData.data.user.memberId;
+
+  // 2. Resolve workspace invite using inviteCode
+  const wsRes = await fetch(`${baseUrl}/workspaces/${testWorkspaceId}`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const wsData = await wsRes.json();
+  const inviteCode = wsData.data.inviteCode;
+  assert.ok(inviteCode);
+
+  const inviteRes = await fetch(`${baseUrl}/workspaces/invite/${inviteCode}`, {
+    headers: { Authorization: `Bearer ${priyaToken}` },
+  });
+  const inviteInfo = await inviteRes.json();
+  assert.equal(inviteRes.status, 200);
+  assert.equal(inviteInfo.data.isMember, false);
+  assert.equal(inviteInfo.data.hasPendingRequest, false);
+
+  // 3. Priya submits join request via invite
+  const joinReqRes = await fetch(`${baseUrl}/workspaces/${testWorkspaceId}/join-request`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${priyaToken}`,
+    },
+    body: JSON.stringify({
+      message: 'Hello, I would like to assist the Hospitality team for Vignan Mahotsav.',
+    }),
+  });
+  const joinReqData = await joinReqRes.json();
+  assert.equal(joinReqRes.status, 201);
+  assert.equal(joinReqData.data.status, 'PENDING');
+  const requestId = joinReqData.data._id;
+
+  // 4. Workspace owner lists pending join requests
+  const listReqRes = await fetch(`${baseUrl}/workspaces/${testWorkspaceId}/join-requests?status=PENDING`, {
+    headers: { Authorization: `Bearer ${authToken}` },
+  });
+  const listReqData = await listReqRes.json();
+  assert.equal(listReqRes.status, 200);
+  const foundReq = listReqData.data.find((r) => r._id === requestId);
+  assert.ok(foundReq);
+  assert.equal(foundReq.userId.memberId, priyaMemberId);
+
+  // 5. Workspace owner approves join request
+  const decideRes = await fetch(
+    `${baseUrl}/workspaces/${testWorkspaceId}/join-requests/${requestId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`,
+      },
+      body: JSON.stringify({ status: 'APPROVED' }),
+    }
+  );
+  const decideData = await decideRes.json();
+  assert.equal(decideRes.status, 200);
+  assert.equal(decideData.data.status, 'APPROVED');
+
+  // 6. Verify Priya is now an active member
+  const verifyRes = await fetch(`${baseUrl}/workspaces/invite/${inviteCode}`, {
+    headers: { Authorization: `Bearer ${priyaToken}` },
+  });
+  const verifyData = await verifyRes.json();
+  assert.equal(verifyRes.status, 200);
+  assert.equal(verifyData.data.isMember, true);
+});
+
+test('20. Workspace Onboarding: Owner directly adds member by Unique Member ID', async () => {
+  // Register another user
+  const regRes = await fetch(`${baseUrl}/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: 'Vikram Singh',
+      email: `vikram_${Date.now()}@example.com`,
+      password: 'Password123!',
+      title: 'Sound & Stage Lead',
+    }),
+  });
+  const regData = await regRes.json();
+  assert.equal(regRes.status, 201);
+  const vikramMemberId = regData.data.user.memberId;
+  assert.ok(vikramMemberId);
+
+  // Directly add Vikram to workspace using his Unique Member ID
+  const addRes = await fetch(`${baseUrl}/workspaces/${testWorkspaceId}/members`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${authToken}`,
+    },
+    body: JSON.stringify({
+      identifier: vikramMemberId,
+      role: 'WORKSPACE_MEMBER',
+    }),
+  });
+  const addData = await addRes.json();
+  assert.equal(addRes.status, 201);
+  assert.equal(addData.data.userId.memberId, vikramMemberId);
+});

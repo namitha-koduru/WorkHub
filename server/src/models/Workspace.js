@@ -48,6 +48,13 @@ const workspaceSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    inviteCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      uppercase: true,
+      trim: true,
+    },
   },
   {
     timestamps: true,
@@ -56,6 +63,14 @@ const workspaceSchema = new mongoose.Schema(
 
 // Slug unique within organization
 workspaceSchema.index({ organizationId: 1, slug: 1 }, { unique: true });
+
+// Auto-generate inviteCode if not set
+workspaceSchema.pre('validate', function (next) {
+  if (!this.inviteCode) {
+    this.inviteCode = `INV-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+  }
+  next();
+});
 
 export const Workspace = mongoose.model('Workspace', workspaceSchema);
 

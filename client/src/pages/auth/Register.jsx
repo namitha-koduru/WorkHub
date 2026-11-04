@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/auth.api';
 import { Button } from '../../components/common/Button';
@@ -14,6 +14,9 @@ export default function Register() {
   const [errorMsg, setErrorMsg] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const redirectPath = new URLSearchParams(location.search).get('redirect') || '/app/dashboard';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,7 +27,7 @@ export default function Register() {
       const res = await authApi.register({ name, email, password, title });
       if (res.success && res.data) {
         login(res.data.user, res.data.activeOrg);
-        navigate('/app/dashboard');
+        navigate(redirectPath);
       }
     } catch (err) {
       setErrorMsg(err.message || 'Registration failed. Please check your details.');
@@ -125,7 +128,10 @@ export default function Register() {
 
           <div className="mt-6 text-center text-xs text-slate-500">
             Already have an account?{' '}
-            <Link to="/login" className="font-semibold text-indigo-600 hover:text-indigo-500">
+            <Link
+              to={location.search ? `/login${location.search}` : '/login'}
+              className="font-semibold text-indigo-600 hover:text-indigo-500"
+            >
               Sign in here
             </Link>
           </div>

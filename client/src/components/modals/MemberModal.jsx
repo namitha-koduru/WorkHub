@@ -7,7 +7,7 @@ import { workspaceApi } from '../../api/workspace.api';
 import { roomApi } from '../../api/room.api';
 import { authApi } from '../../api/auth.api';
 import { Avatar } from '../common/Avatar';
-import { AlertCircle, UserPlus, Search } from 'lucide-react';
+import { AlertCircle, UserPlus, Search, Hash, Users, Mail } from 'lucide-react';
 
 export function MemberModal({
   isOpen,
@@ -19,6 +19,8 @@ export function MemberModal({
 }) {
   const queryClient = useQueryClient();
   const [email, setEmail] = useState('');
+  const [manualIdentifier, setManualIdentifier] = useState('');
+  const [addMode, setAddMode] = useState('byId'); // 'byId' | 'roster'
   const [selectedUserId, setSelectedUserId] = useState('');
   const [role, setRole] = useState(
     type === 'org' ? 'ORG_MEMBER' : type === 'workspace' ? 'WORKSPACE_MEMBER' : 'ROOM_MEMBER'
@@ -55,7 +57,8 @@ export function MemberModal({
       if (type === 'org') {
         return orgApi.addMember(targetId, { email, role });
       } else if (type === 'workspace') {
-        return workspaceApi.addMember(targetId, { userId: selectedUserId, role });
+        const identifier = addMode === 'byId' ? manualIdentifier.trim() : selectedUserId;
+        return workspaceApi.addMember(targetId, { identifier, role });
       } else {
         return roomApi.addMember(targetId, { userId: selectedUserId, role });
       }
@@ -63,6 +66,7 @@ export function MemberModal({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`${type}-members`] });
       setEmail('');
+      setManualIdentifier('');
       setSelectedUserId('');
       setSearchQuery('');
       onClose();
@@ -72,12 +76,26 @@ export function MemberModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setErrorMsg('');
+
     if (type === 'org' && !email.trim()) {
       setErrorMsg('User email is required');
       return;
     }
-    if ((type === 'workspace' || type === 'room') && !selectedUserId) {
-      setErrorMsg('Please select a member to add');
+
+    if (type === 'workspace') {
+      if (addMode === 'byId' && !manualIdentifier.trim()) {
+        setErrorMsg('Please enter a Member Unique ID (e.g. WH-XXXXXX) or user email.');
+        return;
+      }
+      if (addMode === 'roster' && !selectedUserId) {
+        setErrorMsg('Please select a member from the organization roster.');
+        return;
+      }
+    }
+
+    if (type === 'room' && !selectedUserId) {
+      setErrorMsg('Please select a workspace member to add.');
       return;
     }
 
@@ -86,7 +104,7 @@ export function MemberModal({
 
   const getTitle = () => {
     if (type === 'org') return 'Invite Member to Organization';
-    if (type === 'workspace') return 'Assign Member to Workspace';
+    if (type === 'workspace') return 'Add Member to Workspace';
     return 'Add Member to Room';
   };
 
@@ -142,23 +160,71 @@ export function MemberModal({
             )}
           </div>
         ) : type === 'workspace' ? (
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">
-              Select Organization Member *
-            </label>
-            <select
-              required
-              value={selectedUserId}
-              onChange={(e) => setSelectedUserId(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
-            >
-              <option value="">Select a member...</option>
-              {orgMembers.map((m) => (
-                <option key={m.user?._id} value={m.user?._id}>
-                  {m.user?.name} ({m.user?.email}) - {m.role}
-                </option>
-              ))}
-            </select>
+          <div className="space-y-3">
+            {/* Mode selection tabs */}
+            <div className="flex rounded-lg bg-slate-100 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => setAddMode('byId')}
+                className={`flex-1 py-1.5 rounded-md font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                  addMode === 'byId'
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Hash className="h-3.5 w-3.5" />
+                <span>By Unique ID / Email</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setAddMode('roster')}
+                className={`flex-1 py-1.5 rounded-md font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                  addMode === 'roster'
+                    ? 'bg-white text-indigo-700 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Users className="h-3.5 w-3.5" />
+                <span>From Org Roster</span>
+              </button>
+            </div>
+
+            {addMode === 'byId' ? (
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Member Unique ID or Email *
+                </label>
+                <input
+                  type="text"
+                  value={manualIdentifier}
+                  onChange={(e) => setManualIdentifier(e.target.value)}
+                  placeholder="e.g. WH-DEV004 or name@domain.com"
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                />
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Enter the member's unique WorkHub ID (found in their profile/header) or their registered email address.
+                </p>
+              </div>
+            ) : (
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">
+                  Select Organization Member *
+                </label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white"
+                >
+                  <option value="">Select a member...</option>
+                  {orgMembers.map((m) => (
+                    <option key={m.user?._id} value={m.user?._id}>
+                      {m.user?.name} ({m.user?.memberId || m.user?.email}) - {m.role}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
         ) : (
           <div>
@@ -174,7 +240,7 @@ export function MemberModal({
               <option value="">Select a member...</option>
               {wsMembers.map((m) => (
                 <option key={m.user?._id} value={m.user?._id}>
-                  {m.user?.name} ({m.user?.email}) - {m.role}
+                  {m.user?.name} ({m.user?.memberId || m.user?.email}) - {m.role}
                 </option>
               ))}
             </select>
@@ -220,4 +286,3 @@ export function MemberModal({
     </Modal>
   );
 }
-

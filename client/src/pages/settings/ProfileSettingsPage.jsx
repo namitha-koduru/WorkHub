@@ -3,7 +3,6 @@ import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/auth.api';
 import { Button } from '../../components/common/Button';
 import { Avatar } from '../../components/common/Avatar';
-import api from '../../api/client';
 import {
   User,
   Lock,
@@ -11,8 +10,10 @@ import {
   Briefcase,
   CheckCircle2,
   AlertCircle,
-  Database,
-  RefreshCw,
+  Hash,
+  Copy,
+  Check,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function ProfileSettingsPage() {
@@ -34,9 +35,15 @@ export default function ProfileSettingsPage() {
   const [passwordError, setPasswordError] = useState('');
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  // Database Seed state
-  const [seedSuccess, setSeedSuccess] = useState('');
-  const [seedLoading, setSeedLoading] = useState(false);
+  // Copy state
+  const [copiedId, setCopiedId] = useState(false);
+
+  const handleCopyId = () => {
+    if (!user?.memberId) return;
+    navigator.clipboard.writeText(user.memberId);
+    setCopiedId(true);
+    setTimeout(() => setCopiedId(false), 2000);
+  };
 
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -77,31 +84,57 @@ export default function ProfileSettingsPage() {
     }
   };
 
-  const handleResetSeed = async () => {
-    if (!window.confirm('Reset all databases with demo operations dataset?')) return;
-    setSeedLoading(true);
-    try {
-      const res = await api.post('/seed');
-      if (res.success) {
-        setSeedSuccess('Demo dataset refreshed! Please reload to see updated state.');
-      }
-    } catch (err) {
-      alert('Seed failed: ' + err.message);
-    } finally {
-      setSeedLoading(false);
-    }
-  };
-
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
           <User className="h-6 w-6 text-indigo-600" />
-          Profile & Security Settings
+          Profile & Account Identity
         </h1>
         <p className="text-sm text-slate-500 mt-1">
-          Manage your personal credentials, contact info, and system preferences
+          Manage your credentials, professional title, and unique collaboration identity
         </p>
+      </div>
+
+      {/* Member Unique ID Card */}
+      <div className="bg-gradient-to-r from-indigo-50 via-white to-violet-50 rounded-2xl border border-indigo-100 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 flex items-center gap-1">
+              <Hash className="h-3.5 w-3.5" />
+              Unique Member ID
+            </span>
+            <span className="text-[10px] bg-emerald-100 text-emerald-800 font-semibold px-2 py-0.5 rounded-full border border-emerald-200">
+              Active Identity
+            </span>
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <span className="text-2xl font-black font-mono tracking-tight text-slate-900">
+              {user?.memberId || 'WH-000000'}
+            </span>
+            <Button
+              size="xs"
+              variant="outline"
+              icon={copiedId ? Check : Copy}
+              onClick={handleCopyId}
+            >
+              {copiedId ? 'Copied' : 'Copy ID'}
+            </Button>
+          </div>
+          <p className="text-xs text-slate-500 pt-1 max-w-lg">
+            Share this ID with workspace owners and managers to be added directly to any workspace, department, or room without requiring an email invitation.
+          </p>
+        </div>
+
+        <div className="bg-white/80 border border-slate-200 p-4 rounded-xl text-xs space-y-1 sm:max-w-xs shrink-0">
+          <div className="flex items-center gap-1.5 text-slate-700 font-semibold">
+            <ShieldCheck className="h-4 w-4 text-indigo-600" />
+            Verified Role: {user?.role || 'ORGANIZATION_MEMBER'}
+          </div>
+          <p className="text-slate-400 text-[11px]">
+            Created: {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'Active'}
+          </p>
+        </div>
       </div>
 
       {/* Profile Details Form */}
@@ -239,31 +272,6 @@ export default function ProfileSettingsPage() {
           </Button>
         </form>
       </div>
-
-      {/* Developer Demonstration Data Reset */}
-      <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-mono text-indigo-400">DEMO & EVALUATION UTILITY</span>
-          <h3 className="text-base font-bold mt-1">Refresh Sample Operations Data</h3>
-          <p className="text-xs text-slate-400 mt-1 max-w-lg">
-            Re-populates Vignan Mahotsav 2027 workspaces, rooms, sample tasks in all 5 statuses,
-            schedules, checkpoints, and daily standups.
-          </p>
-          {seedSuccess && <p className="text-xs text-emerald-400 mt-2 font-bold">{seedSuccess}</p>}
-        </div>
-
-        <Button
-          size="sm"
-          variant="secondary"
-          icon={RefreshCw}
-          isLoading={seedLoading}
-          onClick={handleResetSeed}
-          className="shrink-0"
-        >
-          Reset Demo Dataset
-        </Button>
-      </div>
     </div>
   );
 }
-

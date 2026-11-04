@@ -15,6 +15,7 @@ export { Comment } from './Comment.js';
 export { Suggestion } from './Suggestion.js';
 export { Approval } from './Approval.js';
 export { Announcement } from './Announcement.js';
+export { WorkspaceJoinRequest } from './WorkspaceJoinRequest.js';
 export { Notification } from './Notification.js';
 export { ActivityLog } from './ActivityLog.js';
 export { Attachment } from './Attachment.js';
