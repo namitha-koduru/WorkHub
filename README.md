@@ -8,22 +8,33 @@ WorkHub is an enterprise-grade collaborative workflow, project organization, and
 
 ```
 Organization (Vignan Operations Management)
-    └── Workspaces (e.g. Vignan Mahotsav 2027, Technical Symposium)
-            └── Rooms (e.g. Technical Team, Public Relations, Hospitality & Logistics)
-                    ├── Tasks & Checkpoints (Kanban Drag & Drop with 5 Statuses)
-                    ├── Schedules & Milestones (FullCalendar Multi-Scope Engine)
-                    ├── Daily Work Standups (Today accomplishments, WIP, blockers & Tomorrow plan)
-                    ├── Discussions & Suggestions (Forum thread, Accept/Reject review workflow)
-                    ├── Review & Approval Pipeline (To Do → In Progress → Under Review → Completed)
-                    └── Real-time Notifications & Audit Activity Trails (Socket.IO)
+    └── Workspaces (e.g. Vignan Mahotsav 2027 – Full event/project scope)
+            ├── Shared Event Dashboard (Overall progress, KPIs, announcements, live activity)
+            ├── Master Event Calendar (All milestones, department deadlines & meetings)
+            ├── All-Teams Daily Standups (Manager standup overview & consolidated blocker triage)
+            ├── Announcements Board (Workspace-wide and department notices with urgency flags)
+            │
+            └── Teams / Departments (e.g. PR & Marketing, Technical Team, Hospitality, Sponsorship)
+                    ├── Department Overview & Mandate Responsibilities Checklist
+                    ├── Department Calendar & Scheduling
+                    ├── Team Leader Member Daily Updates Inspection (Accomplishments, WIP, Blockers)
+                    ├── Department Discussion Forum & Improvement Proposals / Suggestions
+                    ├── Team Member Roster & Role Assignments
+                    │
+                    └── Collaborative Rooms & Channels (e.g. Stage AV, Network Mesh, Social Media)
+                            ├── Multi-Collaborator Tasks & Subtask Checkpoints (Kanban Drag & Drop)
+                            ├── Room Calendar & Deadlines
+                            ├── Room Discussions & Live Updates
+                            ├── Review & Approval Pipeline (To Do → In Progress → Under Review → Completed)
+                            └── Real-time Notifications & Audit Trails (Socket.IO)
 ```
 
 ### 5-Tier RBAC Role Hierarchy:
-1. **Organization Owner**: Complete governance, billing, workspace creation, member management.
-2. **Organization Admin**: Workspace provisioning, administrative invitations, staff oversight.
-3. **Workspace Manager**: Workspace scope management, room creation, aggregated workspace reports.
-4. **Room Leader**: Department task assignment, approval reviews, room plans, calendar.
-5. **Team Member**: Assigned task execution, review requests, daily plan submission.
+1. **Organization Owner**: Complete governance, workspace provisioning, global staff oversight.
+2. **Organization Admin**: Workspace management, administrative invitations, policy administration.
+3. **Workspace Manager**: Event workspace management, department teams creation, broadcast announcements, cross-team standup summary.
+4. **Team Leader**: Departmental oversight, room/channel creation, member assignment, daily update inspection, suggestion review.
+5. **Room Leader & Team Member**: Collaborative room tasks execution, checkpoint completion, review requests, daily plan submission.
 
 ---
 

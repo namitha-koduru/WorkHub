@@ -20,6 +20,12 @@ const dailyPlanSchema = new mongoose.Schema(
       default: null,
       index: true,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true,
+    },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room',
@@ -92,9 +98,8 @@ const dailyPlanSchema = new mongoose.Schema(
   }
 );
 
-// Unique index: One plan per user per day
 dailyPlanSchema.index({ userId: 1, date: 1 }, { unique: true });
-dailyPlanSchema.index({ roomId: 1, date: 1 });
+dailyPlanSchema.index({ teamId: 1, date: 1 });
+dailyPlanSchema.index({ workspaceId: 1, date: 1 });
 
 export const DailyPlan = mongoose.model('DailyPlan', dailyPlanSchema);
-

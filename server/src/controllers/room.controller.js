@@ -1,5 +1,7 @@
 import { Room } from '../models/Room.js';
 import { RoomMember } from '../models/RoomMember.js';
+import { Team } from '../models/Team.js';
+import { TeamMember } from '../models/TeamMember.js';
 import { Workspace } from '../models/Workspace.js';
 import { WorkspaceMember } from '../models/WorkspaceMember.js';
 import { OrganizationMember } from '../models/OrganizationMember.js';
@@ -14,11 +16,21 @@ import { createNotification } from '../services/notification.service.js';
 
 export const createRoom = async (req, res, next) => {
   try {
-    const { workspaceId, organizationId, name, description, leader } = req.body;
+    const { teamId, workspaceId, organizationId, name, description, leader } = req.body;
+
+    if (!teamId) {
+      return next(ApiError.badRequest('Team ID is required to create a room.'));
+    }
+
+    const team = await Team.findById(teamId);
+    if (!team) {
+      return next(ApiError.notFound('Team not found.'));
+    }
 
     const slug = `${name.toLowerCase().replace(/[^a-z0-9]/g, '-')}-${Date.now().toString().slice(-4)}`;
 
     const room = await Room.create({
+      teamId,
       workspaceId,
       organizationId,
       name,
@@ -30,6 +42,7 @@ export const createRoom = async (req, res, next) => {
     // Ensure leader is added to RoomMember as ROOM_LEADER
     await RoomMember.create({
       roomId: room._id,
+      teamId,
       workspaceId,
       userId: leader,
       role: ROLES.ROOM_LEADER,
@@ -39,6 +52,7 @@ export const createRoom = async (req, res, next) => {
     if (String(req.user._id) !== String(leader)) {
       await RoomMember.create({
         roomId: room._id,
+        teamId,
         workspaceId,
         userId: req.user._id,
         role: ROLES.ROOM_LEADER,
@@ -53,7 +67,7 @@ export const createRoom = async (req, res, next) => {
       action: ACTIVITY_ACTION.ROOM_CREATED,
       entityType: 'ROOM',
       entityId: room._id,
-      details: { name: room.name },
+      details: { name: room.name, teamName: team.name },
     });
 
     await createNotification({
@@ -64,10 +78,14 @@ export const createRoom = async (req, res, next) => {
       roomId: room._id,
       type: NOTIFICATION_TYPE.SYSTEM_ALERT,
       title: 'Assigned as Room Leader',
-      message: `You have been appointed as the Leader for room "${room.name}".`,
+      message: `You have been appointed as the Leader for room "${room.name}" in team "${team.name}".`,
     });
 
-    return ApiResponse.created(res, room, 'Room created successfully.');
+    const populated = await Room.findById(room._id)
+      .populate('leader', 'name email avatarUrl title')
+      .populate('teamId', 'name slug');
+
+    return ApiResponse.created(res, populated, 'Room created successfully.');
   } catch (error) {
     next(error);
   }
@@ -75,7 +93,7 @@ export const createRoom = async (req, res, next) => {
 
 export const getRooms = async (req, res, next) => {
   try {
-    const { workspaceId } = req.query;
+    const { workspaceId, teamId } = req.query;
     if (!workspaceId) {
       return next(ApiError.badRequest('Workspace ID is required'));
     }
@@ -101,10 +119,22 @@ export const getRooms = async (req, res, next) => {
     });
     const isWsManager = wsMembership && wsMembership.role === ROLES.WORKSPACE_MANAGER;
 
+    let isTeamLeader = false;
+    if (teamId) {
+      const tm = await TeamMember.findOne({ teamId, userId: req.user._id });
+      isTeamLeader = tm && tm.role === ROLES.TEAM_LEADER;
+    }
+
+    const queryFilter = { workspaceId, isArchived: false };
+    if (teamId) {
+      queryFilter.teamId = teamId;
+    }
+
     let rooms;
-    if (isOrgAdmin || isWsManager) {
-      rooms = await Room.find({ workspaceId, isArchived: false })
+    if (isOrgAdmin || isWsManager || isTeamLeader) {
+      rooms = await Room.find(queryFilter)
         .populate('leader', 'name email avatarUrl')
+        .populate('teamId', 'name slug')
         .sort({ createdAt: 1 });
     } else {
       // Team members only see rooms they belong to
@@ -114,12 +144,10 @@ export const getRooms = async (req, res, next) => {
       });
       const roomIds = myMemberships.map((m) => m.roomId);
 
-      rooms = await Room.find({
-        _id: { $in: roomIds },
-        workspaceId,
-        isArchived: false,
-      })
+      queryFilter._id = { $in: roomIds };
+      rooms = await Room.find(queryFilter)
         .populate('leader', 'name email avatarUrl')
+        .populate('teamId', 'name slug')
         .sort({ createdAt: 1 });
     }
 
@@ -155,6 +183,7 @@ export const getRoomById = async (req, res, next) => {
     const { roomId } = req.params;
     const room = await Room.findById(roomId)
       .populate('leader', 'name email avatarUrl title')
+      .populate('teamId', 'name slug responsibilities leader')
       .populate('workspaceId', 'name slug category');
 
     if (!room || room.isArchived) {
@@ -295,6 +324,7 @@ export const addRoomMember = async (req, res, next) => {
 
     const member = await RoomMember.create({
       roomId,
+      teamId: room.teamId,
       workspaceId: room.workspaceId,
       userId,
       role: role || ROLES.ROOM_MEMBER,

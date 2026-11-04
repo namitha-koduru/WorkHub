@@ -2,10 +2,16 @@ import mongoose from 'mongoose';
 
 const suggestionSchema = new mongoose.Schema(
   {
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true,
+    },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room',
-      required: true,
+      default: null,
       index: true,
     },
     workspaceId: {
@@ -61,5 +67,6 @@ const suggestionSchema = new mongoose.Schema(
   }
 );
 
-export const Suggestion = mongoose.model('Suggestion', suggestionSchema);
+suggestionSchema.index({ workspaceId: 1, status: 1 });
 
+export const Suggestion = mongoose.model('Suggestion', suggestionSchema);

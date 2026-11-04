@@ -1,6 +1,7 @@
 import { Workspace } from '../models/Workspace.js';
 import { WorkspaceMember } from '../models/WorkspaceMember.js';
 import { OrganizationMember } from '../models/OrganizationMember.js';
+import { Team } from '../models/Team.js';
 import { Room } from '../models/Room.js';
 import { Task } from '../models/Task.js';
 import { Schedule } from '../models/Schedule.js';
@@ -100,6 +101,7 @@ export const getWorkspaces = async (req, res, next) => {
     // Attach summary room and task stats
     const enriched = await Promise.all(
       workspaces.map(async (ws) => {
+        const teamCount = await Team.countDocuments({ workspaceId: ws._id, isArchived: false });
         const roomCount = await Room.countDocuments({ workspaceId: ws._id, isArchived: false });
         const taskCount = await Task.countDocuments({ workspaceId: ws._id, isArchived: false });
         const completedTaskCount = await Task.countDocuments({
@@ -110,6 +112,7 @@ export const getWorkspaces = async (req, res, next) => {
 
         return {
           ...ws.toObject(),
+          teamCount,
           roomCount,
           taskCount,
           completedTaskCount,
@@ -136,6 +139,7 @@ export const getWorkspaceById = async (req, res, next) => {
     }
 
     // Metrics
+    const teamCount = await Team.countDocuments({ workspaceId, isArchived: false });
     const roomCount = await Room.countDocuments({ workspaceId, isArchived: false });
     const totalTasks = await Task.countDocuments({ workspaceId, isArchived: false });
     const completedTasks = await Task.countDocuments({
@@ -158,6 +162,7 @@ export const getWorkspaceById = async (req, res, next) => {
     return ApiResponse.success(res, {
       ...workspace.toObject(),
       metrics: {
+        teamCount,
         roomCount,
         totalTasks,
         completedTasks,

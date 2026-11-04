@@ -4,7 +4,7 @@ const commentSchema = new mongoose.Schema(
   {
     targetType: {
       type: String,
-      enum: ['TASK', 'ROOM_DISCUSSION'],
+      enum: ['WORKSPACE_DISCUSSION', 'TEAM_DISCUSSION', 'ROOM_DISCUSSION', 'TASK'],
       required: true,
       index: true,
     },
@@ -24,10 +24,16 @@ const commentSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true,
+    },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room',
-      required: true,
+      default: null,
       index: true,
     },
     author: {
@@ -59,4 +65,3 @@ const commentSchema = new mongoose.Schema(
 commentSchema.index({ targetId: 1, createdAt: 1 });
 
 export const Comment = mongoose.model('Comment', commentSchema);
-

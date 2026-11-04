@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { workspaceApi } from '../../api/workspace.api';
+import { teamApi } from '../../api/team.api';
 import { roomApi } from '../../api/room.api';
 import { useAuth } from '../../context/AuthContext';
 import {
@@ -15,15 +16,17 @@ import {
   Settings,
   FolderKanban,
   DoorOpen,
+  Users,
+  Megaphone,
   X,
 } from 'lucide-react';
 
-function WorkspaceTreeItem({ workspace, activeWorkspaceId, activeRoomId }) {
-  const [isOpen, setIsOpen] = useState(workspace._id === activeWorkspaceId);
+function TeamTreeItem({ workspaceId, team, activeRoomId }) {
+  const [isOpen, setIsOpen] = useState(false);
 
   const { data: roomsRes } = useQuery({
-    queryKey: ['rooms', workspace._id],
-    queryFn: () => roomApi.getAll(workspace._id),
+    queryKey: ['rooms', workspaceId, team._id],
+    queryFn: () => roomApi.getAll(workspaceId, team._id),
     enabled: isOpen,
   });
 
@@ -31,12 +34,73 @@ function WorkspaceTreeItem({ workspace, activeWorkspaceId, activeRoomId }) {
 
   return (
     <div className="space-y-0.5">
+      <div className="flex items-center justify-between rounded-md hover:bg-slate-100 group px-2 py-1 text-xs">
+        <NavLink
+          to={`/app/workspaces/${workspaceId}/teams/${team._id}/overview`}
+          className={({ isActive }) =>
+            `flex items-center gap-1.5 flex-1 truncate font-medium ${
+              isActive ? 'text-indigo-600 font-bold' : 'text-slate-600'
+            }`
+          }
+        >
+          <Users className="h-3 w-3 text-slate-400 group-hover:text-indigo-600 shrink-0" />
+          <span className="truncate">{team.name}</span>
+        </NavLink>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="p-0.5 rounded hover:bg-slate-200/60 text-slate-400 hover:text-slate-600"
+        >
+          {isOpen ? <ChevronDown className="h-2.5 w-2.5" /> : <ChevronRight className="h-2.5 w-2.5" />}
+        </button>
+      </div>
+
+      {isOpen && (
+        <div className="pl-3.5 space-y-0.5 border-l border-slate-200 ml-2 my-0.5">
+          {rooms.length === 0 ? (
+            <p className="text-[10px] text-slate-400 py-0.5 pl-1 italic">No rooms yet</p>
+          ) : (
+            rooms.map((room) => (
+              <NavLink
+                key={room._id}
+                to={`/app/workspaces/${workspaceId}/rooms/${room._id}/board`}
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 px-2 py-1 text-[11px] rounded transition-colors ${
+                    isActive
+                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
+                      : 'text-slate-500 hover:bg-slate-100 hover:text-slate-800'
+                  }`
+                }
+              >
+                <DoorOpen className="h-2.5 w-2.5 text-slate-400 shrink-0" />
+                <span className="truncate">{room.name}</span>
+              </NavLink>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WorkspaceTreeItem({ workspace, activeWorkspaceId, activeRoomId }) {
+  const [isOpen, setIsOpen] = useState(workspace._id === activeWorkspaceId);
+
+  const { data: teamsRes } = useQuery({
+    queryKey: ['teams', workspace._id],
+    queryFn: () => teamApi.getAll(workspace._id),
+    enabled: isOpen,
+  });
+
+  const teams = teamsRes?.data || [];
+
+  return (
+    <div className="space-y-0.5">
       <div className="flex items-center justify-between rounded-lg hover:bg-slate-100 group px-2 py-1.5 transition-colors">
         <NavLink
           to={`/app/workspaces/${workspace._id}/overview`}
           className={({ isActive }) =>
-            `flex items-center gap-2 text-xs font-medium flex-1 truncate ${
-              isActive ? 'text-indigo-600 font-semibold' : 'text-slate-700'
+            `flex items-center gap-2 text-xs font-semibold flex-1 truncate ${
+              isActive ? 'text-indigo-600 font-bold' : 'text-slate-700'
             }`
           }
         >
@@ -52,27 +116,68 @@ function WorkspaceTreeItem({ workspace, activeWorkspaceId, activeRoomId }) {
       </div>
 
       {isOpen && (
-        <div className="pl-6 space-y-0.5 border-l border-slate-200 ml-3.5 my-1">
-          {rooms.length === 0 ? (
-            <p className="text-[11px] text-slate-400 py-1 pl-2 italic">No rooms yet</p>
-          ) : (
-            rooms.map((room) => (
-              <NavLink
-                key={room._id}
-                to={`/app/workspaces/${workspace._id}/rooms/${room._id}/board`}
-                className={({ isActive }) =>
-                  `flex items-center gap-2 px-2 py-1 text-xs rounded-md transition-colors ${
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-700 font-semibold'
-                      : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-                  }`
-                }
-              >
-                <DoorOpen className="h-3 w-3 shrink-0 text-slate-400" />
-                <span className="truncate">{room.name}</span>
-              </NavLink>
-            ))
-          )}
+        <div className="pl-4 space-y-1 border-l border-slate-200 ml-3.5 my-1">
+          {/* Quick links */}
+          <div className="space-y-0.5 pb-1 mb-1 border-b border-slate-100">
+            <NavLink
+              to={`/app/workspaces/${workspace._id}/overview`}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-2 py-1 text-[11px] rounded transition-colors ${
+                  isActive
+                    ? 'text-indigo-600 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`
+              }
+            >
+              <LayoutDashboard className="h-3 w-3" />
+              <span>Event Dashboard</span>
+            </NavLink>
+            <NavLink
+              to={`/app/workspaces/${workspace._id}/teams`}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-2 py-1 text-[11px] rounded transition-colors ${
+                  isActive
+                    ? 'text-indigo-600 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`
+              }
+            >
+              <Users className="h-3 w-3" />
+              <span>All Teams ({teams.length})</span>
+            </NavLink>
+            <NavLink
+              to={`/app/workspaces/${workspace._id}/announcements`}
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-2 py-1 text-[11px] rounded transition-colors ${
+                  isActive
+                    ? 'text-indigo-600 font-bold'
+                    : 'text-slate-500 hover:text-slate-800'
+                }`
+              }
+            >
+              <Megaphone className="h-3 w-3" />
+              <span>Announcements</span>
+            </NavLink>
+          </div>
+
+          {/* Department Teams List */}
+          <div className="space-y-0.5">
+            <span className="px-2 text-[10px] font-bold uppercase tracking-wider text-slate-400 block pb-0.5">
+              Departments
+            </span>
+            {teams.length === 0 ? (
+              <p className="text-[11px] text-slate-400 py-1 pl-2 italic">No teams established</p>
+            ) : (
+              teams.map((team) => (
+                <TeamTreeItem
+                  key={team._id}
+                  workspaceId={workspace._id}
+                  team={team}
+                  activeRoomId={activeRoomId}
+                />
+              ))
+            )}
+          </div>
         </div>
       )}
     </div>

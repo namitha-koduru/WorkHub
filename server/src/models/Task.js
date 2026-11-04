@@ -27,6 +27,12 @@ const taskSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true,
+    },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room',
@@ -93,7 +99,7 @@ const taskSchema = new mongoose.Schema(
 );
 
 taskSchema.index({ roomId: 1, status: 1, order: 1 });
+taskSchema.index({ teamId: 1, status: 1 });
 taskSchema.index({ workspaceId: 1, dueDate: 1 });
 
 export const Task = mongoose.model('Task', taskSchema);
-

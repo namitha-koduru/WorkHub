@@ -2,7 +2,11 @@ import api from './client';
 
 export const roomApi = {
   create: (data) => api.post('/rooms', data),
-  getAll: (workspaceId) => api.get(`/rooms?workspaceId=${workspaceId}`),
+  getAll: (workspaceId, teamId) => {
+    let url = `/rooms?workspaceId=${workspaceId}`;
+    if (teamId) url += `&teamId=${teamId}`;
+    return api.get(url);
+  },
   getById: (roomId) => api.get(`/rooms/${roomId}`),
   update: (roomId, data) => api.put(`/rooms/${roomId}`, data),
   getMembers: (roomId) => api.get(`/rooms/${roomId}/members`),

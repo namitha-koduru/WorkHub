@@ -7,6 +7,7 @@ import { SocketProvider } from './context/SocketContext';
 // Layouts
 import { AppLayout } from './layouts/AppLayout';
 import { WorkspaceLayout } from './layouts/WorkspaceLayout';
+import { TeamLayout } from './layouts/TeamLayout';
 import { RoomLayout } from './layouts/RoomLayout';
 
 // Auth Pages
@@ -24,9 +25,20 @@ import OrgSettingsPage from './pages/settings/OrgSettingsPage';
 // Workspace Pages
 import WorkspaceListPage from './pages/workspaces/WorkspaceListPage';
 import WorkspaceOverviewPage from './pages/workspaces/WorkspaceOverviewPage';
+import WorkspaceAnnouncementsPage from './pages/workspaces/WorkspaceAnnouncementsPage';
+import WorkspaceDailyStandupsPage from './pages/workspaces/WorkspaceDailyStandupsPage';
 import WorkspaceCalendarPage from './pages/workspaces/WorkspaceCalendarPage';
 import WorkspaceReportsPage from './pages/workspaces/WorkspaceReportsPage';
 import WorkspaceMembersPage from './pages/workspaces/WorkspaceMembersPage';
+
+// Team Pages
+import TeamListPage from './pages/teams/TeamListPage';
+import TeamOverviewPage from './pages/teams/TeamOverviewPage';
+import TeamRoomsPage from './pages/teams/TeamRoomsPage';
+import TeamCalendarPage from './pages/teams/TeamCalendarPage';
+import TeamDailyUpdatesPage from './pages/teams/TeamDailyUpdatesPage';
+import TeamDiscussionsPage from './pages/teams/TeamDiscussionsPage';
+import TeamMembersPage from './pages/teams/TeamMembersPage';
 
 // Room Pages
 import RoomOverviewPage from './pages/rooms/RoomOverviewPage';
@@ -81,14 +93,46 @@ export default function App() {
                 <Route path="workspaces/:workspaceId" element={<WorkspaceLayout />}>
                   <Route index element={<Navigate to="overview" replace />} />
                   <Route path="overview" element={<WorkspaceOverviewPage />} />
+                  <Route path="teams" element={<TeamListPage />} />
+                  <Route path="announcements" element={<WorkspaceAnnouncementsPage />} />
                   <Route path="calendar" element={<WorkspaceCalendarPage />} />
+                  <Route path="daily-standups" element={<WorkspaceDailyStandupsPage />} />
                   <Route path="reports" element={<WorkspaceReportsPage />} />
                   <Route path="members" element={<WorkspaceMembersPage />} />
                 </Route>
 
-                {/* Room Routes */}
+                {/* Team Routes */}
+                <Route
+                  path="workspaces/:workspaceId/teams/:teamId"
+                  element={<TeamLayout />}
+                >
+                  <Route index element={<Navigate to="overview" replace />} />
+                  <Route path="overview" element={<TeamOverviewPage />} />
+                  <Route path="rooms" element={<TeamRoomsPage />} />
+                  <Route path="calendar" element={<TeamCalendarPage />} />
+                  <Route path="daily-updates" element={<TeamDailyUpdatesPage />} />
+                  <Route path="discussions" element={<TeamDiscussionsPage />} />
+                  <Route path="members" element={<TeamMembersPage />} />
+                </Route>
+
+                {/* Room Routes (Direct or under team) */}
                 <Route
                   path="workspaces/:workspaceId/rooms/:roomId"
+                  element={<RoomLayout />}
+                >
+                  <Route index element={<Navigate to="board" replace />} />
+                  <Route path="overview" element={<RoomOverviewPage />} />
+                  <Route path="board" element={<RoomKanbanBoardPage />} />
+                  <Route path="list" element={<RoomTaskListPage />} />
+                  <Route path="calendar" element={<RoomCalendarPage />} />
+                  <Route path="milestones" element={<RoomMilestonesPage />} />
+                  <Route path="daily-plans" element={<RoomDailyPlansPage />} />
+                  <Route path="discussions" element={<RoomDiscussionsPage />} />
+                  <Route path="activity" element={<RoomActivityPage />} />
+                </Route>
+
+                <Route
+                  path="workspaces/:workspaceId/teams/:teamId/rooms/:roomId"
                   element={<RoomLayout />}
                 >
                   <Route index element={<Navigate to="board" replace />} />

@@ -29,6 +29,7 @@ export function TaskModal({ isOpen, onClose, taskId, roomId, workspaceId }) {
   const [priority, setPriority] = useState('Medium');
   const [status, setStatus] = useState('To Do');
   const [assignedTo, setAssignedTo] = useState('');
+  const [collaborators, setCollaborators] = useState([]);
   const [startDate, setStartDate] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [tags, setTags] = useState('');
@@ -84,6 +85,9 @@ export function TaskModal({ isOpen, onClose, taskId, roomId, workspaceId }) {
       setPriority(task.priority || 'Medium');
       setStatus(task.status || 'To Do');
       setAssignedTo(task.assignedTo?._id || '');
+      setCollaborators(
+        task.collaborators ? task.collaborators.map((c) => (c._id ? c._id : c)) : []
+      );
       setStartDate(task.startDate ? task.startDate.split('T')[0] : '');
       setDueDate(task.dueDate ? task.dueDate.split('T')[0] : '');
       setTags(task.tags ? task.tags.join(', ') : '');
@@ -93,6 +97,7 @@ export function TaskModal({ isOpen, onClose, taskId, roomId, workspaceId }) {
       setPriority('Medium');
       setStatus('To Do');
       setAssignedTo('');
+      setCollaborators([]);
       setStartDate('');
       setDueDate('');
       setTags('');
@@ -196,6 +201,7 @@ export function TaskModal({ isOpen, onClose, taskId, roomId, workspaceId }) {
       priority,
       status,
       assignedTo: assignedTo || null,
+      collaborators,
       startDate: startDate || null,
       dueDate: dueDate || null,
       tags: tags
@@ -291,6 +297,49 @@ export function TaskModal({ isOpen, onClose, taskId, roomId, workspaceId }) {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Collaborators */}
+        <div>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
+            Task Collaborators & Assisting Team Members
+          </label>
+          <div className="flex flex-wrap gap-1.5 p-2 rounded-lg bg-slate-50 border border-slate-200">
+            {roomMembers.length === 0 ? (
+              <span className="text-xs text-slate-400 italic">No room members available</span>
+            ) : (
+              roomMembers.map((m) => {
+                const uId = m.user?._id;
+                if (!uId || uId === assignedTo) return null;
+                const isSelected = collaborators.includes(uId);
+                return (
+                  <button
+                    type="button"
+                    key={uId}
+                    onClick={() => {
+                      if (isSelected) {
+                        setCollaborators(collaborators.filter((id) => id !== uId));
+                      } else {
+                        setCollaborators([...collaborators, uId]);
+                      }
+                    }}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white shadow-sm'
+                        : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    <Avatar user={m.user} size="xs" />
+                    <span>{m.user?.name}</span>
+                    {isSelected && <Check className="h-3 w-3" />}
+                  </button>
+                );
+              })
+            )}
+          </div>
+          <p className="text-[11px] text-slate-400 mt-1">
+            Collaborators share responsibility, receive task alerts, and can update progress checkpoints.
+          </p>
         </div>
 
         {/* Dates & Tags */}

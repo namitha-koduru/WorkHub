@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TASK_STATUSES } from '../constants/taskStatuses.js';
 import { TASK_PRIORITIES } from '../constants/priorities.js';
-import { ORG_ROLES, WORKSPACE_ROLES, ROOM_ROLES } from '../constants/roles.js';
+import { ORG_ROLES, WORKSPACE_ROLES, TEAM_ROLES, ROOM_ROLES } from '../constants/roles.js';
 
 // Auth Validations
 export const registerSchema = z.object({
@@ -68,8 +68,32 @@ export const addWorkspaceMemberSchema = z.object({
   role: z.enum(WORKSPACE_ROLES).default('WORKSPACE_MEMBER'),
 });
 
+// Team Validations (NEW)
+export const createTeamSchema = z.object({
+  workspaceId: z.string().min(1, 'Workspace ID is required'),
+  organizationId: z.string().min(1, 'Organization ID is required'),
+  name: z.string().min(2, 'Team name is required').max(100),
+  description: z.string().max(1000).optional(),
+  responsibilities: z.array(z.string()).optional(),
+  leader: z.string().min(1, 'Leader ID is required'),
+});
+
+export const updateTeamSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
+  description: z.string().max(1000).optional(),
+  responsibilities: z.array(z.string()).optional(),
+  leader: z.string().optional(),
+  isArchived: z.boolean().optional(),
+});
+
+export const addTeamMemberSchema = z.object({
+  userId: z.string().min(1, 'User ID is required'),
+  role: z.enum(TEAM_ROLES).default('TEAM_MEMBER'),
+});
+
 // Room Validations
 export const createRoomSchema = z.object({
+  teamId: z.string().min(1, 'Team ID is required'),
   workspaceId: z.string().min(1, 'Workspace ID is required'),
   organizationId: z.string().min(1, 'Organization ID is required'),
   name: z.string().min(2, 'Room name is required').max(100),
@@ -94,6 +118,7 @@ export const createTaskSchema = z.object({
   title: z.string().min(2, 'Task title is required').max(200),
   description: z.string().optional(),
   workspaceId: z.string().min(1, 'Workspace ID is required'),
+  teamId: z.string().optional().nullable(),
   roomId: z.string().min(1, 'Room ID is required'),
   assignedTo: z.string().nullable().optional(),
   collaborators: z.array(z.string()).optional(),
@@ -152,6 +177,7 @@ export const createScheduleSchema = z.object({
   description: z.string().optional(),
   organizationId: z.string().min(1),
   workspaceId: z.string().min(1),
+  teamId: z.string().nullable().optional(),
   roomId: z.string().nullable().optional(),
   type: z.enum(['MEETING', 'ACTIVITY', 'MILESTONE', 'REMINDER']).default('MEETING'),
   startTime: z.string().min(1, 'Start time is required'),
@@ -166,6 +192,7 @@ export const saveDailyPlanSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
   organizationId: z.string().min(1),
   workspaceId: z.string().nullable().optional(),
+  teamId: z.string().nullable().optional(),
   roomId: z.string().nullable().optional(),
   todayWork: z.object({
     plannedTasks: z.array(z.string()).default([]),
@@ -182,19 +209,33 @@ export const saveDailyPlanSchema = z.object({
   }),
 });
 
+// Announcement Validations (NEW)
+export const createAnnouncementSchema = z.object({
+  scope: z.enum(['WORKSPACE', 'TEAM']).default('WORKSPACE'),
+  organizationId: z.string().min(1),
+  workspaceId: z.string().min(1),
+  teamId: z.string().nullable().optional(),
+  title: z.string().min(2).max(200),
+  content: z.string().min(5),
+  isPinned: z.boolean().default(false),
+  priority: z.enum(['NORMAL', 'URGENT']).default('NORMAL'),
+});
+
 // Comment & Suggestion Validations
 export const createCommentSchema = z.object({
-  targetType: z.enum(['TASK', 'ROOM_DISCUSSION']),
+  targetType: z.enum(['WORKSPACE_DISCUSSION', 'TEAM_DISCUSSION', 'ROOM_DISCUSSION', 'TASK']),
   targetId: z.string().min(1),
   organizationId: z.string().min(1),
   workspaceId: z.string().min(1),
-  roomId: z.string().min(1),
+  teamId: z.string().nullable().optional(),
+  roomId: z.string().nullable().optional(),
   content: z.string().min(1, 'Comment cannot be empty'),
   mentions: z.array(z.string()).optional(),
 });
 
 export const createSuggestionSchema = z.object({
-  roomId: z.string().min(1),
+  roomId: z.string().nullable().optional(),
+  teamId: z.string().nullable().optional(),
   workspaceId: z.string().min(1),
   organizationId: z.string().min(1),
   title: z.string().min(2).max(150),
@@ -216,4 +257,3 @@ export const decideApprovalSchema = z.object({
   decision: z.enum(['APPROVED', 'CHANGES_REQUESTED']),
   comments: z.string().optional(),
 });
-

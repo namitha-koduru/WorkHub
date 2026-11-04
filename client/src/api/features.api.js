@@ -12,6 +12,10 @@ export const dailyPlanApi = {
   getMyPlan: (date) => api.get(`/daily-plans/me${date ? `?date=${date}` : ''}`),
   getRoomPlans: (roomId, date) =>
     api.get(`/daily-plans/room/${roomId}${date ? `?date=${date}` : ''}`),
+  getTeamPlans: (teamId, date) =>
+    api.get(`/daily-plans/team/${teamId}${date ? `?date=${date}` : ''}`),
+  getWorkspaceSummary: (workspaceId, date) =>
+    api.get(`/daily-plans/workspace/${workspaceId}/summary${date ? `?date=${date}` : ''}`),
   getHistory: (limit = 14) => api.get(`/daily-plans/history?limit=${limit}`),
 };
 
@@ -26,6 +30,14 @@ export const suggestionApi = {
   create: (data) => api.post('/suggestions', data),
   getByRoom: (roomId, status) =>
     api.get(`/suggestions?roomId=${roomId}${status ? `&status=${status}` : ''}`),
+  getByTarget: ({ roomId, teamId, workspaceId, status } = {}) => {
+    let url = '/suggestions?';
+    if (roomId) url += `roomId=${roomId}&`;
+    if (teamId) url += `teamId=${teamId}&`;
+    if (workspaceId) url += `workspaceId=${workspaceId}&`;
+    if (status) url += `status=${status}&`;
+    return api.get(url);
+  },
   decide: (suggestionId, data) => api.patch(`/suggestions/${suggestionId}/status`, data),
 };
 

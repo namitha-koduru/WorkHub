@@ -45,11 +45,14 @@ export const createTask = async (req, res, next) => {
     // Determine order
     const taskCount = await Task.countDocuments({ roomId, status: status || TASK_STATUS.TODO });
 
+    const teamId = req.body.teamId || room.teamId || null;
+
     const task = await Task.create({
       title,
       description: description || '',
       organizationId: room.organizationId,
       workspaceId,
+      teamId,
       roomId,
       createdBy: req.user._id,
       assignedTo: assignedTo || null,
@@ -117,12 +120,16 @@ export const createTask = async (req, res, next) => {
 
 export const getTasks = async (req, res, next) => {
   try {
-    const { roomId, status, priority, search, assignedTo } = req.query;
-    if (!roomId) {
-      return next(ApiError.badRequest('Room ID is required'));
+    const { roomId, teamId, workspaceId, status, priority, search, assignedTo } = req.query;
+    if (!roomId && !teamId && !workspaceId) {
+      return next(ApiError.badRequest('Room ID, Team ID, or Workspace ID is required'));
     }
 
-    const query = { roomId, isArchived: false };
+    const query = { isArchived: false };
+    if (roomId) query.roomId = roomId;
+    else if (teamId) query.teamId = teamId;
+    else if (workspaceId) query.workspaceId = workspaceId;
+
     if (status) query.status = status;
     if (priority) query.priority = priority;
     if (assignedTo) query.assignedTo = assignedTo;
@@ -138,6 +145,8 @@ export const getTasks = async (req, res, next) => {
       .populate('assignedTo', 'name email avatarUrl title')
       .populate('createdBy', 'name email avatarUrl')
       .populate('collaborators', 'name email avatarUrl')
+      .populate('roomId', 'name')
+      .populate('teamId', 'name')
       .sort({ order: 1, createdAt: -1 });
 
     // Fetch checkpoint counts for each task

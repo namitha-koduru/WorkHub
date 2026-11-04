@@ -6,6 +6,10 @@ export const taskApi = {
     const query = new URLSearchParams(params).toString();
     return api.get(`/tasks?${query}`);
   },
+  getTasks: (params) => {
+    const query = new URLSearchParams(params).toString();
+    return api.get(`/tasks?${query}`);
+  },
   getMyTasks: () => api.get('/tasks/my-tasks'),
   getById: (taskId) => api.get(`/tasks/${taskId}`),
   update: (taskId, data) => api.put(`/tasks/${taskId}`, data),

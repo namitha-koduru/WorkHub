@@ -2,6 +2,12 @@ import mongoose from 'mongoose';
 
 const roomSchema = new mongoose.Schema(
   {
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      required: true,
+      index: true,
+    },
     workspaceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Workspace',
@@ -49,7 +55,5 @@ const roomSchema = new mongoose.Schema(
   }
 );
 
-roomSchema.index({ workspaceId: 1, slug: 1 }, { unique: true });
-
+roomSchema.index({ teamId: 1, slug: 1 }, { unique: true });
 export const Room = mongoose.model('Room', roomSchema);
-

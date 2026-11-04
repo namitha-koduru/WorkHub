@@ -8,10 +8,11 @@ import { emitToRoom } from '../services/socket.service.js';
 
 export const createSuggestion = async (req, res, next) => {
   try {
-    const { roomId, workspaceId, organizationId, title, description } = req.body;
+    const { roomId = null, teamId = null, workspaceId, organizationId, title, description } = req.body;
 
     const suggestion = await Suggestion.create({
       roomId,
+      teamId,
       workspaceId,
       organizationId,
       author: req.user._id,
@@ -27,7 +28,7 @@ export const createSuggestion = async (req, res, next) => {
     await logActivity({
       organizationId,
       workspaceId,
-      roomId,
+      roomId: roomId || undefined,
       actor: req.user._id,
       action: ACTIVITY_ACTION.SUGGESTION_CREATED,
       entityType: 'SUGGESTION',
@@ -35,7 +36,9 @@ export const createSuggestion = async (req, res, next) => {
       details: { title: suggestion.title },
     });
 
-    emitToRoom(roomId, 'suggestion_created', populated);
+    if (roomId) {
+      emitToRoom(roomId, 'suggestion_created', populated);
+    }
 
     return ApiResponse.created(res, populated, 'Suggestion submitted successfully.');
   } catch (error) {
@@ -45,12 +48,16 @@ export const createSuggestion = async (req, res, next) => {
 
 export const getSuggestions = async (req, res, next) => {
   try {
-    const { roomId, status } = req.query;
-    if (!roomId) {
-      return next(ApiError.badRequest('Room ID is required'));
+    const { roomId, teamId, workspaceId, status } = req.query;
+    if (!roomId && !teamId && !workspaceId) {
+      return next(ApiError.badRequest('Room ID, Team ID, or Workspace ID is required'));
     }
 
-    const query = { roomId };
+    const query = {};
+    if (roomId) query.roomId = roomId;
+    else if (teamId) query.teamId = teamId;
+    else if (workspaceId) query.workspaceId = workspaceId;
+
     if (status) query.status = status;
 
     const suggestions = await Suggestion.find(query)

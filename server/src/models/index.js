@@ -3,6 +3,8 @@ export { Organization } from './Organization.js';
 export { OrganizationMember } from './OrganizationMember.js';
 export { Workspace } from './Workspace.js';
 export { WorkspaceMember } from './WorkspaceMember.js';
+export { Team } from './Team.js';
+export { TeamMember } from './TeamMember.js';
 export { Room } from './Room.js';
 export { RoomMember } from './RoomMember.js';
 export { Task } from './Task.js';
@@ -12,7 +14,7 @@ export { DailyPlan } from './DailyPlan.js';
 export { Comment } from './Comment.js';
 export { Suggestion } from './Suggestion.js';
 export { Approval } from './Approval.js';
+export { Announcement } from './Announcement.js';
 export { Notification } from './Notification.js';
 export { ActivityLog } from './ActivityLog.js';
 export { Attachment } from './Attachment.js';
-

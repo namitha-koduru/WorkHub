@@ -45,6 +45,7 @@ export default function WorkspaceReportsPage() {
   }
 
   const kpi = report?.kpi || {};
+  const teamPerformance = report?.teamPerformance || [];
   const roomPerformance = report?.roomPerformance || [];
   const statusDistribution = report?.statusDistribution?.filter((s) => s.value > 0) || [];
   const milestones = report?.milestones || [];
@@ -106,6 +107,29 @@ export default function WorkspaceReportsPage() {
 
       {/* Visualizers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Department Comparative Velocity */}
+        <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">
+            Department / Team Task Completion Comparison
+          </h3>
+          {teamPerformance.length === 0 ? (
+            <p className="text-xs text-slate-400 italic py-8 text-center">No teams recorded.</p>
+          ) : (
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={teamPerformance}>
+                  <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} />
+                  <YAxis allowDecimals={false} stroke="#94a3b8" fontSize={11} />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="completed" name="Completed" fill="#10b981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pending" name="Pending" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </div>
+
         {/* Room Comparative Velocity */}
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <h3 className="text-sm font-semibold text-slate-900 mb-4">

@@ -25,6 +25,12 @@ const scheduleSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      default: null,
+      index: true,
+    },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Room',
@@ -78,7 +84,7 @@ const scheduleSchema = new mongoose.Schema(
 );
 
 scheduleSchema.index({ workspaceId: 1, startTime: 1, endTime: 1 });
+scheduleSchema.index({ teamId: 1, startTime: 1 });
 scheduleSchema.index({ roomId: 1, startTime: 1 });
 
 export const Schedule = mongoose.model('Schedule', scheduleSchema);
-

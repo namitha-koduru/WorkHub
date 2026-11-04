@@ -3,6 +3,8 @@ import { Organization } from '../models/Organization.js';
 import { OrganizationMember } from '../models/OrganizationMember.js';
 import { Workspace } from '../models/Workspace.js';
 import { WorkspaceMember } from '../models/WorkspaceMember.js';
+import { Team } from '../models/Team.js';
+import { TeamMember } from '../models/TeamMember.js';
 import { Room } from '../models/Room.js';
 import { RoomMember } from '../models/RoomMember.js';
 import { Task } from '../models/Task.js';
@@ -12,6 +14,7 @@ import { DailyPlan } from '../models/DailyPlan.js';
 import { Comment } from '../models/Comment.js';
 import { Suggestion } from '../models/Suggestion.js';
 import { Approval } from '../models/Approval.js';
+import { Announcement } from '../models/Announcement.js';
 import { Notification } from '../models/Notification.js';
 import { ActivityLog } from '../models/ActivityLog.js';
 import { ROLES } from '../constants/roles.js';
@@ -26,6 +29,8 @@ export const seedDatabase = async () => {
     OrganizationMember.deleteMany({}),
     Workspace.deleteMany({}),
     WorkspaceMember.deleteMany({}),
+    Team.deleteMany({}),
+    TeamMember.deleteMany({}),
     Room.deleteMany({}),
     RoomMember.deleteMany({}),
     Task.deleteMany({}),
@@ -35,6 +40,7 @@ export const seedDatabase = async () => {
     Comment.deleteMany({}),
     Suggestion.deleteMany({}),
     Approval.deleteMany({}),
+    Announcement.deleteMany({}),
     Notification.deleteMany({}),
     ActivityLog.deleteMany({}),
   ]);
@@ -70,7 +76,7 @@ export const seedDatabase = async () => {
       name: 'Sneha Patel',
       email: 'member1@workhub.com',
       passwordHash: defaultPasswordHash,
-      title: 'Full Stack Engineer',
+      title: 'Full Stack & Media Lead',
       avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     },
     {
@@ -106,7 +112,7 @@ export const seedDatabase = async () => {
     organizationId: org._id,
     name: 'Vignan Mahotsav 2027',
     slug: 'vignan-mahotsav-2027',
-    description: 'Annual National Cultural and Technical Festival coordinating 20,000+ delegates.',
+    description: 'Annual National Cultural and Technical Festival coordinating 20,000+ delegates across 40 universities.',
     category: 'Cultural & Tech Fest',
     status: 'ACTIVE',
     managers: [manager._id],
@@ -126,6 +132,7 @@ export const seedDatabase = async () => {
 
   // Workspace Members
   await WorkspaceMember.insertMany([
+    { workspaceId: mahotsavWorkspace._id, userId: admin._id, role: ROLES.WORKSPACE_MANAGER },
     { workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.WORKSPACE_MANAGER },
     { workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.WORKSPACE_MEMBER },
     { workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.WORKSPACE_MEMBER },
@@ -134,55 +141,252 @@ export const seedDatabase = async () => {
     { workspaceId: symposiumWorkspace._id, userId: leader._id, role: ROLES.WORKSPACE_MEMBER },
   ]);
 
-  // 5. Create Rooms under Vignan Mahotsav 2027
-  const techRoom = await Room.create({
+  // 5. Create Teams under Vignan Mahotsav 2027
+  const prTeam = await Team.create({
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'PR & Digital Marketing',
+    slug: 'pr-digital-marketing',
+    description: 'Managing public visibility, digital campaigns, media relations, campus ambassadors, and creative design.',
+    responsibilities: [
+      'Social Media Campaign Execution',
+      'Campus Ambassador Program across 50 Colleges',
+      'Media Press Releases & Influencer Coverage',
+      'Creative Graphic Design & Video Production',
+    ],
+    leader: manager._id,
+  });
+
+  const techTeam = await Team.create({
     workspaceId: mahotsavWorkspace._id,
     organizationId: org._id,
     name: 'Technical Team',
     slug: 'technical-team',
-    description: 'Stage lighting, high-wattage sound systems, digital portals, and power grids.',
+    description: 'Stage engineering, audiovisual production, power infrastructure, high-density Wi-Fi networks, and live portal management.',
+    responsibilities: [
+      'High-Density Campus Wi-Fi Mesh',
+      'Main Stage Truss & DMX Lighting',
+      'Acoustic Calibration & Line Array Audio',
+      'Real-time Delegate Registration & Scanning Portal',
+    ],
     leader: leader._id,
   });
 
-  const prRoom = await Room.create({
-    workspaceId: mahotsavWorkspace._id,
-    organizationId: org._id,
-    name: 'Public Relations',
-    slug: 'public-relations',
-    description: 'Press releases, campus outreach, social media broadcasts, and media briefings.',
-    leader: manager._id,
-  });
-
-  const hospitalityRoom = await Room.create({
+  const logisticsTeam = await Team.create({
     workspaceId: mahotsavWorkspace._id,
     organizationId: org._id,
     name: 'Hospitality & Logistics',
     slug: 'hospitality-logistics',
-    description: 'Dignitary reception, accommodation, catering logistics, and fleet transit.',
+    description: 'Dignitary reception, judge hospitality, travel coordination, guest accommodation, and catering logistics.',
+    responsibilities: [
+      'Guest of Honor Escort and Protocol',
+      'Accommodation for 1,200 Outstation Participants',
+      'Food Courts & Catering Management',
+      'Transit Shuttles Between Stations & Campus',
+    ],
     leader: member2._id,
   });
 
-  // Room Members
-  await RoomMember.insertMany([
-    { roomId: techRoom._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.ROOM_LEADER },
-    { roomId: techRoom._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_MEMBER },
-    { roomId: prRoom._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.ROOM_LEADER },
-    { roomId: hospitalityRoom._id, workspaceId: mahotsavWorkspace._id, userId: member2._id, role: ROLES.ROOM_LEADER },
+  const sponsorshipTeam = await Team.create({
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Sponsorship & Finance',
+    slug: 'sponsorship-finance',
+    description: 'Corporate brand sponsorships, budget clearances, stalls allocation, and merchandise partnerships.',
+    responsibilities: [
+      'Securing Title and Platinum Sponsors',
+      'Vendor Stall Allotments in Fest Arena',
+      'Financial Approvals and Procurement Audits',
+    ],
+    leader: manager._id,
+  });
+
+  // Assign Team Memberships
+  await TeamMember.insertMany([
+    // PR Team
+    { teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.TEAM_LEADER },
+    { teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.TEAM_MEMBER },
+    { teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: admin._id, role: ROLES.TEAM_MEMBER },
+
+    // Tech Team
+    { teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.TEAM_LEADER },
+    { teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.TEAM_MEMBER },
+    { teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.TEAM_MEMBER },
+
+    // Logistics Team
+    { teamId: logisticsTeam._id, workspaceId: mahotsavWorkspace._id, userId: member2._id, role: ROLES.TEAM_LEADER },
+    { teamId: logisticsTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.TEAM_MEMBER },
+
+    // Sponsorship Team
+    { teamId: sponsorshipTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.TEAM_LEADER },
+    { teamId: sponsorshipTeam._id, workspaceId: mahotsavWorkspace._id, userId: member2._id, role: ROLES.TEAM_MEMBER },
   ]);
 
-  // 6. Create Tasks in Tech Room
+  // 6. Create Collaborative Rooms inside Teams
+  // PR Team Rooms
+  const socialMediaRoom = await Room.create({
+    teamId: prTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Social Media Campaigns',
+    slug: 'social-media-campaigns',
+    description: 'Instagram reels, YouTube shorts, countdown posts, and influencer tag campaigns.',
+    leader: manager._id,
+  });
+
+  const emailCommsRoom = await Room.create({
+    teamId: prTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Email Communications',
+    slug: 'email-communications',
+    description: 'Invitations to 300+ university colleges, dean letters, and delegate registration blasts.',
+    leader: member1._id,
+  });
+
+  const posterApprovalRoom = await Room.create({
+    teamId: prTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Poster & Creative Approvals',
+    slug: 'poster-creative-approvals',
+    description: 'Review stage for brand banners, fest theme teaser graphics, and celebrity event creatives.',
+    leader: manager._id,
+  });
+
+  // Tech Team Rooms
+  const avStageRoom = await Room.create({
+    teamId: techTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Stage AV & Lighting',
+    slug: 'stage-av-lighting',
+    description: 'Truss rigging, moving-head lighting, line array acoustic tuning, and DMX sync.',
+    leader: leader._id,
+  });
+
+  const networkRoom = await Room.create({
+    teamId: techTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Network Infrastructure',
+    slug: 'network-infrastructure',
+    description: 'Gigabit fiber backhaul, outdoor Wi-Fi access mesh, and live streaming video uplinks.',
+    leader: leader._id,
+  });
+
+  const softwarePortalRoom = await Room.create({
+    teamId: techTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Registration Portal & Scanning',
+    slug: 'registration-portal-scanning',
+    description: 'Attendee QR code pass generation, on-gate barcode scanning, and load testing.',
+    leader: member1._id,
+  });
+
+  // Logistics Team Rooms
+  const receptionRoom = await Room.create({
+    teamId: logisticsTeam._id,
+    workspaceId: mahotsavWorkspace._id,
+    organizationId: org._id,
+    name: 'Dignitary Reception & Protocol',
+    slug: 'dignitary-reception-protocol',
+    description: 'Airport & train reception, VIP lounge arrangements, and stage felicitation logistics.',
+    leader: member2._id,
+  });
+
+  // Assign Room Memberships
+  await RoomMember.insertMany([
+    // Social Media Room
+    { roomId: socialMediaRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.ROOM_LEADER },
+    { roomId: socialMediaRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_MEMBER },
+
+    // Email Comms Room
+    { roomId: emailCommsRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_LEADER },
+    { roomId: emailCommsRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.ROOM_MEMBER },
+
+    // Poster Approval Room
+    { roomId: posterApprovalRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: manager._id, role: ROLES.ROOM_LEADER },
+    { roomId: posterApprovalRoom._id, teamId: prTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_MEMBER },
+
+    // Tech Rooms
+    { roomId: avStageRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.ROOM_LEADER },
+    { roomId: avStageRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_MEMBER },
+
+    { roomId: networkRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.ROOM_LEADER },
+    { roomId: networkRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_MEMBER },
+
+    { roomId: softwarePortalRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: member1._id, role: ROLES.ROOM_LEADER },
+    { roomId: softwarePortalRoom._id, teamId: techTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.ROOM_MEMBER },
+
+    // Logistics Room
+    { roomId: receptionRoom._id, teamId: logisticsTeam._id, workspaceId: mahotsavWorkspace._id, userId: member2._id, role: ROLES.ROOM_LEADER },
+    { roomId: receptionRoom._id, teamId: logisticsTeam._id, workspaceId: mahotsavWorkspace._id, userId: leader._id, role: ROLES.ROOM_MEMBER },
+  ]);
+
+  // 7. Announcements
+  await Announcement.insertMany([
+    {
+      scope: 'WORKSPACE',
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      author: admin._id,
+      title: 'Vignan Mahotsav 2027 Countdown: 18 Days Remaining',
+      content: 'All team leads must submit their finalized budget sheets and vendor contracts by Friday 5:00 PM. General security walk-through with local authorities is confirmed for next Monday.',
+      isPinned: true,
+      priority: 'URGENT',
+    },
+    {
+      scope: 'WORKSPACE',
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      author: manager._id,
+      title: 'Central Control Room Operational in Admin Block 204',
+      content: 'All department coordination radios and walkie-talkies can be collected from Room 204 starting tomorrow morning. Please designate one radio handler per team.',
+      isPinned: false,
+      priority: 'NORMAL',
+    },
+    {
+      scope: 'TEAM',
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      teamId: techTeam._id,
+      author: leader._id,
+      title: 'Safety Protocol: Hard Hats Mandatory in Stage Arena',
+      content: 'Truss elevation starts today at 2 PM. Only authorized technicians with hard hats and safety harnesses are allowed inside the main auditorium perimeter.',
+      isPinned: true,
+      priority: 'URGENT',
+    },
+    {
+      scope: 'TEAM',
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      teamId: prTeam._id,
+      author: manager._id,
+      title: 'Celebrity Night Teaser Video Approved for Release',
+      content: 'The official promo reel featuring the celebrity musical band has received clearance from the Dean office. Deploy on Instagram and YouTube at 6:00 PM today.',
+      isPinned: false,
+      priority: 'NORMAL',
+    },
+  ]);
+
+  // 8. Tasks with Multiple Collaborators & Checkpoints
   const now = new Date();
   const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
+  // Network Task
   const task1 = await Task.create({
     title: 'Deploy High-Density Outdoor Wi-Fi Meshes for Main Arena',
-    description: 'Install 16 enterprise access points covering 8,000 square meters for live streaming.',
+    description: 'Install 16 enterprise access points covering 8,000 square meters for live streaming and 15,000 concurrent student connections.',
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: techTeam._id,
+    roomId: networkRoom._id,
     createdBy: leader._id,
     assignedTo: member1._id,
+    collaborators: [leader._id],
     priority: 'Urgent',
     status: 'In Progress',
     startDate: now,
@@ -191,14 +395,17 @@ export const seedDatabase = async () => {
     order: 0,
   });
 
+  // AV Task
   const task2 = await Task.create({
     title: 'Finalize Stage Truss Lighting and DMX Controller Setup',
-    description: 'Verify 48 moving-head spotlights, laser grids, and redundant power generators.',
+    description: 'Verify 48 moving-head spotlights, laser grids, and redundant power generators with fire clearance.',
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: techTeam._id,
+    roomId: avStageRoom._id,
     createdBy: leader._id,
     assignedTo: leader._id,
+    collaborators: [member1._id],
     priority: 'High',
     status: 'Under Review',
     startDate: now,
@@ -207,14 +414,17 @@ export const seedDatabase = async () => {
     order: 1,
   });
 
+  // Software Portal Task
   const task3 = await Task.create({
     title: 'Fest Registration Portal Load Testing & Security Audit',
-    description: 'Simulate 15,000 concurrent user registrations and benchmark payment gateway callbacks.',
+    description: 'Simulate 15,000 concurrent user registrations and benchmark payment gateway webhook callbacks.',
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: techTeam._id,
+    roomId: softwarePortalRoom._id,
     createdBy: leader._id,
     assignedTo: member1._id,
+    collaborators: [leader._id],
     priority: 'Medium',
     status: 'To Do',
     startDate: now,
@@ -223,14 +433,36 @@ export const seedDatabase = async () => {
     order: 2,
   });
 
+  // PR Social Media Task
   const task4 = await Task.create({
-    title: 'Main Stage Line-Array Sound Calibration',
-    description: 'Complete acoustic profiling and noise level checks with regional municipal guidelines.',
+    title: 'Launch Nationwide Campus Ambassador Referral Campaign',
+    description: 'Ship promotional packages, access kits, and automated affiliate leaderboards across 45 partner colleges.',
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: prTeam._id,
+    roomId: socialMediaRoom._id,
+    createdBy: manager._id,
+    assignedTo: member1._id,
+    collaborators: [manager._id],
+    priority: 'High',
+    status: 'In Progress',
+    startDate: now,
+    dueDate: nextWeek,
+    tags: ['PR', 'Ambassadors', 'Viral'],
+    order: 0,
+  });
+
+  // Completed Task
+  const task5 = await Task.create({
+    title: 'Main Stage Line-Array Sound Calibration',
+    description: 'Complete acoustic profiling and decibel checks adhering to regional municipal noise guidelines.',
+    organizationId: org._id,
+    workspaceId: mahotsavWorkspace._id,
+    teamId: techTeam._id,
+    roomId: avStageRoom._id,
     createdBy: leader._id,
     assignedTo: member1._id,
+    collaborators: [leader._id],
     priority: 'High',
     status: 'Completed',
     startDate: new Date(now.getTime() - 2 * 24 * 60 * 60 * 1000),
@@ -239,11 +471,11 @@ export const seedDatabase = async () => {
     order: 3,
   });
 
-  // 7. Checkpoints for Task 1
+  // Checkpoints for Task 1
   await Checkpoint.insertMany([
     {
       taskId: task1._id,
-      roomId: techRoom._id,
+      roomId: networkRoom._id,
       workspaceId: mahotsavWorkspace._id,
       organizationId: org._id,
       title: 'Run optical fiber backhaul cables to Central Server Room',
@@ -255,7 +487,7 @@ export const seedDatabase = async () => {
     },
     {
       taskId: task1._id,
-      roomId: techRoom._id,
+      roomId: networkRoom._id,
       workspaceId: mahotsavWorkspace._id,
       organizationId: org._id,
       title: 'Mount and configure 16 Cisco outdoor APs with captive portal',
@@ -265,29 +497,44 @@ export const seedDatabase = async () => {
     },
     {
       taskId: task1._id,
-      roomId: techRoom._id,
+      roomId: networkRoom._id,
       workspaceId: mahotsavWorkspace._id,
       organizationId: org._id,
       title: 'Conduct walk-through speed test and latency verification',
       status: 'PENDING',
-      responsibleMember: member1._id,
+      responsibleMember: leader._id,
       targetDate: tomorrow,
     },
   ]);
 
-  // 8. Schedules & Milestones
+  // 9. Multi-tier Schedules & Milestones
   await Schedule.insertMany([
     {
-      title: 'All-Hands Tech & AV Coordination Meeting',
-      description: 'Comprehensive review with sound, lighting, and stage rigging teams.',
+      title: 'All-Hands Fest Readiness Coordination Meeting',
+      description: 'Comprehensive review with technical leads, PR heads, and logistics supervisors.',
       organizationId: org._id,
       workspaceId: mahotsavWorkspace._id,
-      roomId: techRoom._id,
+      teamId: null, // Workspace scope
+      roomId: null,
       type: 'MEETING',
       startTime: new Date(now.getTime() + 2 * 60 * 60 * 1000),
       endTime: new Date(now.getTime() + 3 * 60 * 60 * 1000),
       location: 'Central Seminar Hall A',
-      participants: [admin._id, manager._id, leader._id, member1._id],
+      participants: [admin._id, manager._id, leader._id, member1._id, member2._id],
+      createdBy: manager._id,
+    },
+    {
+      title: 'Technical Rigging & AV Sync Rehearsal',
+      description: 'Full electrical and audio test for the main auditorium stage.',
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      teamId: techTeam._id, // Team scope
+      roomId: avStageRoom._id,
+      type: 'ACTIVITY',
+      startTime: new Date(now.getTime() + 24 * 60 * 60 * 1000),
+      endTime: new Date(now.getTime() + 28 * 60 * 60 * 1000),
+      location: 'Open Air Theatre (OAT)',
+      participants: [leader._id, member1._id],
       createdBy: leader._id,
     },
     {
@@ -295,7 +542,8 @@ export const seedDatabase = async () => {
       description: 'Safety engineer stamp and fire department clearance for all structural rigs.',
       organizationId: org._id,
       workspaceId: mahotsavWorkspace._id,
-      roomId: techRoom._id,
+      teamId: null,
+      roomId: null,
       type: 'MILESTONE',
       startTime: nextWeek,
       endTime: nextWeek,
@@ -305,13 +553,14 @@ export const seedDatabase = async () => {
     },
   ]);
 
-  // 9. Daily Work Plan
+  // 10. Daily Work Plans
   const todayStr = now.toISOString().split('T')[0];
   await DailyPlan.create({
     userId: member1._id,
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: techTeam._id,
+    roomId: networkRoom._id,
     date: todayStr,
     todayWork: {
       plannedTasks: ['Outdoor Wi-Fi Access Point mounting', 'Cisco switch configuration'],
@@ -328,9 +577,32 @@ export const seedDatabase = async () => {
     },
   });
 
-  // 10. Suggestions
+  await DailyPlan.create({
+    userId: leader._id,
+    organizationId: org._id,
+    workspaceId: mahotsavWorkspace._id,
+    teamId: techTeam._id,
+    roomId: avStageRoom._id,
+    date: todayStr,
+    todayWork: {
+      plannedTasks: ['Review lighting cue presets', 'Power generator load trial'],
+      inProgressTasks: ['DMX console programming for opening dance troupe'],
+      completedTasks: ['Safety barrier installation around front truss'],
+      pendingTasks: ['Laser beam alignment calibration'],
+      blockers: '',
+    },
+    tomorrowPlan: {
+      continueTasks: ['Sound check with live orchestra'],
+      newTasks: ['Finalize backup diesel supply arrangement'],
+      expectedCompletion: 'Tomorrow by 8:00 PM',
+      notes: 'Coordinate with Campus Electrical Department.',
+    },
+  });
+
+  // 11. Suggestions
   await Suggestion.create({
-    roomId: techRoom._id,
+    roomId: networkRoom._id,
+    teamId: techTeam._id,
     workspaceId: mahotsavWorkspace._id,
     organizationId: org._id,
     author: member1._id,
@@ -342,24 +614,36 @@ export const seedDatabase = async () => {
     resolutionNotes: 'Approved. Proceed with Raspberry Pi / local Docker BIND9 instance.',
   });
 
-  // 11. Comments
+  // 12. Comments / Discussions
   await Comment.create({
     targetType: 'TASK',
     targetId: task1._id,
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    teamId: techTeam._id,
+    roomId: networkRoom._id,
     author: leader._id,
     content: 'Please ensure IP67 weatherproof seals are firmly locked on access points facing the open lawn.',
     mentions: [member1._id],
   });
 
-  // 12. Approval record for Task 2
+  await Comment.create({
+    targetType: 'TEAM_DISCUSSION',
+    targetId: techTeam._id,
+    organizationId: org._id,
+    workspaceId: mahotsavWorkspace._id,
+    teamId: techTeam._id,
+    author: leader._id,
+    content: 'Welcome to the Technical Team hub for Mahotsav 2027! Please post all equipment requisitions here.',
+    mentions: [],
+  });
+
+  // 13. Approval record for Task 2
   await Approval.create({
     taskId: task2._id,
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    roomId: avStageRoom._id,
     requester: leader._id,
     reviewer: manager._id,
     status: 'PENDING',
@@ -374,25 +658,34 @@ export const seedDatabase = async () => {
     ],
   });
 
-  // 13. Notifications
+  // 14. Notifications
   await Notification.create({
     recipient: member1._id,
     sender: leader._id,
     organizationId: org._id,
     workspaceId: mahotsavWorkspace._id,
-    roomId: techRoom._id,
+    roomId: networkRoom._id,
     type: 'TASK_ASSIGNED',
     title: 'New High Priority Assignment',
     message: 'You have been assigned to: "Deploy High-Density Outdoor Wi-Fi Meshes".',
-    link: `/workspaces/${mahotsavWorkspace._id}/rooms/${techRoom._id}/board?taskId=${task1._id}`,
+    link: `/app/workspaces/${mahotsavWorkspace._id}/teams/${techTeam._id}/rooms/${networkRoom._id}/board?taskId=${task1._id}`,
   });
 
-  // 14. Activity Log entries
+  // 15. Activity Log entries
   await ActivityLog.insertMany([
     {
       organizationId: org._id,
       workspaceId: mahotsavWorkspace._id,
-      roomId: techRoom._id,
+      actor: leader._id,
+      action: 'TEAM_CREATED',
+      entityType: 'WORKSPACE',
+      entityId: techTeam._id,
+      details: { teamName: techTeam.name },
+    },
+    {
+      organizationId: org._id,
+      workspaceId: mahotsavWorkspace._id,
+      roomId: networkRoom._id,
       actor: leader._id,
       action: 'TASK_CREATED',
       entityType: 'TASK',
@@ -402,7 +695,7 @@ export const seedDatabase = async () => {
     {
       organizationId: org._id,
       workspaceId: mahotsavWorkspace._id,
-      roomId: techRoom._id,
+      roomId: networkRoom._id,
       actor: member1._id,
       action: 'CHECKPOINT_COMPLETED',
       entityType: 'TASK',
@@ -411,7 +704,7 @@ export const seedDatabase = async () => {
     },
   ]);
 
-  console.log('[Seed] Database seeding completed successfully with rich operational dataset!');
+  console.log('[Seed] Database seeding completed successfully with rich collaborative dataset!');
 
   return {
     users: users.map((u) => ({ name: u.name, email: u.email, role: u.title })),
@@ -419,4 +712,3 @@ export const seedDatabase = async () => {
     workspaces: [mahotsavWorkspace.name, symposiumWorkspace.name],
   };
 };
-

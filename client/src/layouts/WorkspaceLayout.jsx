@@ -11,6 +11,8 @@ import {
   ChevronRight,
   FolderKanban,
   DoorOpen,
+  Megaphone,
+  Clock,
   Loader2,
 } from 'lucide-react';
 
@@ -44,8 +46,11 @@ export function WorkspaceLayout() {
   }
 
   const tabs = [
-    { to: `/app/workspaces/${workspaceId}/overview`, label: 'Overview', icon: LayoutDashboard },
-    { to: `/app/workspaces/${workspaceId}/calendar`, label: 'Workspace Calendar', icon: Calendar },
+    { to: `/app/workspaces/${workspaceId}/overview`, label: 'Dashboard', icon: LayoutDashboard },
+    { to: `/app/workspaces/${workspaceId}/teams`, label: 'Teams & Departments', icon: Users },
+    { to: `/app/workspaces/${workspaceId}/announcements`, label: 'Announcements', icon: Megaphone },
+    { to: `/app/workspaces/${workspaceId}/calendar`, label: 'Master Calendar', icon: Calendar },
+    { to: `/app/workspaces/${workspaceId}/daily-standups`, label: 'Daily Standups', icon: Clock },
     { to: `/app/workspaces/${workspaceId}/reports`, label: 'Analytics & Reports', icon: BarChart3 },
     { to: `/app/workspaces/${workspaceId}/members`, label: 'Members', icon: Users },
   ];

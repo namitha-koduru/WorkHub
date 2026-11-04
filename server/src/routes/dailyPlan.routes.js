@@ -3,6 +3,8 @@ import {
   saveDailyPlan,
   getMyDailyPlan,
   getRoomDailyPlans,
+  getTeamDailyPlans,
+  getWorkspaceDailySummary,
   getDailyPlanHistory,
 } from '../controllers/dailyPlan.controller.js';
 import { authenticate } from '../middleware/auth.js';
@@ -16,7 +18,8 @@ router.use(authenticate);
 router.post('/', validate(saveDailyPlanSchema), saveDailyPlan);
 router.get('/me', getMyDailyPlan);
 router.get('/room/:roomId', getRoomDailyPlans);
+router.get('/team/:teamId', getTeamDailyPlans);
+router.get('/workspace/:workspaceId/summary', getWorkspaceDailySummary);
 router.get('/history', getDailyPlanHistory);
 
 export default router;
-

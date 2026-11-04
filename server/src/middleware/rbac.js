@@ -2,8 +2,10 @@ import { ApiError } from '../utils/apiError.js';
 import { ROLES } from '../constants/roles.js';
 import { OrganizationMember } from '../models/OrganizationMember.js';
 import { WorkspaceMember } from '../models/WorkspaceMember.js';
+import { TeamMember } from '../models/TeamMember.js';
 import { RoomMember } from '../models/RoomMember.js';
 import { Workspace } from '../models/Workspace.js';
+import { Team } from '../models/Team.js';
 import { Room } from '../models/Room.js';
 
 /**
@@ -54,7 +56,7 @@ export const requireWorkspaceAccess = (allowedWorkspaceRoles = []) => async (req
       return next(ApiError.notFound('Workspace not found'));
     }
 
-    // Check if user is Org Owner or Org Admin (super-access to all org workspaces)
+    // Check if user is Org Owner or Org Admin
     const orgMembership = await OrganizationMember.findOne({
       organizationId: workspace.organizationId,
       userId: req.user._id,
@@ -88,6 +90,7 @@ export const requireWorkspaceAccess = (allowedWorkspaceRoles = []) => async (req
 
     req.workspace = workspace;
     req.wsMembership = wsMembership;
+    req.isWsManager = wsMembership.role === ROLES.WORKSPACE_MANAGER;
     next();
   } catch (error) {
     next(error);
@@ -95,7 +98,72 @@ export const requireWorkspaceAccess = (allowedWorkspaceRoles = []) => async (req
 };
 
 /**
- * Checks room access: Org Owner/Admin, Workspace Manager, or Room Leader/Member
+ * Checks team access: Org Owner/Admin, Workspace Manager, or Team Leader/Member
+ */
+export const requireTeamAccess = (allowedTeamRoles = []) => async (req, res, next) => {
+  try {
+    const teamId = req.params.teamId || req.body.teamId || req.query.teamId;
+    if (!teamId) {
+      return next(ApiError.badRequest('Team ID is required for access verification'));
+    }
+
+    const team = await Team.findById(teamId);
+    if (!team) {
+      return next(ApiError.notFound('Team not found'));
+    }
+
+    // Org Owner / Admin check
+    const orgMembership = await OrganizationMember.findOne({
+      organizationId: team.organizationId,
+      userId: req.user._id,
+      status: 'ACTIVE',
+    });
+
+    if (orgMembership && [ROLES.ORG_OWNER, ROLES.ORG_ADMIN].includes(orgMembership.role)) {
+      req.team = team;
+      req.isOrgAdmin = true;
+      return next();
+    }
+
+    // Workspace Manager check
+    const wsMembership = await WorkspaceMember.findOne({
+      workspaceId: team.workspaceId,
+      userId: req.user._id,
+    });
+
+    if (wsMembership && wsMembership.role === ROLES.WORKSPACE_MANAGER) {
+      req.team = team;
+      req.isWsManager = true;
+      return next();
+    }
+
+    // Direct Team Membership check
+    const teamMembership = await TeamMember.findOne({
+      teamId,
+      userId: req.user._id,
+    });
+
+    if (!teamMembership) {
+      return next(ApiError.forbidden('You do not have permission to access this team'));
+    }
+
+    if (allowedTeamRoles.length > 0 && !allowedTeamRoles.includes(teamMembership.role)) {
+      return next(
+        ApiError.forbidden(`Team action requires roles: ${allowedTeamRoles.join(', ')}`)
+      );
+    }
+
+    req.team = team;
+    req.teamMembership = teamMembership;
+    req.isTeamLeader = teamMembership.role === ROLES.TEAM_LEADER;
+    next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Checks room access: Org Owner/Admin, Workspace Manager, Team Leader, or Room Member
  */
 export const requireRoomAccess = (allowedRoomRoles = []) => async (req, res, next) => {
   try {
@@ -134,6 +202,19 @@ export const requireRoomAccess = (allowedRoomRoles = []) => async (req, res, nex
       return next();
     }
 
+    // Team Leader check
+    if (room.teamId) {
+      const tmMembership = await TeamMember.findOne({
+        teamId: room.teamId,
+        userId: req.user._id,
+      });
+      if (tmMembership && tmMembership.role === ROLES.TEAM_LEADER) {
+        req.room = room;
+        req.isTeamLeader = true;
+        return next();
+      }
+    }
+
     // Direct Room Membership check
     const roomMembership = await RoomMember.findOne({
       roomId,
@@ -157,4 +238,3 @@ export const requireRoomAccess = (allowedRoomRoles = []) => async (req, res, nex
     next(error);
   }
 };
-

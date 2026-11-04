@@ -8,14 +8,23 @@ import { emitToRoom } from '../services/socket.service.js';
 
 export const createComment = async (req, res, next) => {
   try {
-    const { targetType, targetId, organizationId, workspaceId, roomId, content, mentions = [] } =
-      req.body;
+    const {
+      targetType,
+      targetId,
+      organizationId,
+      workspaceId,
+      teamId = null,
+      roomId = null,
+      content,
+      mentions = [],
+    } = req.body;
 
     const comment = await Comment.create({
       targetType,
       targetId,
       organizationId,
       workspaceId,
+      teamId,
       roomId,
       author: req.user._id,
       content,
@@ -29,7 +38,7 @@ export const createComment = async (req, res, next) => {
     await logActivity({
       organizationId,
       workspaceId,
-      roomId,
+      roomId: roomId || undefined,
       actor: req.user._id,
       action: ACTIVITY_ACTION.COMMENT_ADDED,
       entityType: targetType === 'TASK' ? 'TASK' : 'ROOM',

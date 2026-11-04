@@ -1,5 +1,7 @@
 import { Task } from '../models/Task.js';
 import { Workspace } from '../models/Workspace.js';
+import { Team } from '../models/Team.js';
+import { TeamMember } from '../models/TeamMember.js';
 import { Room } from '../models/Room.js';
 import { OrganizationMember } from '../models/OrganizationMember.js';
 import { Schedule } from '../models/Schedule.js';
@@ -84,6 +86,7 @@ export const getWorkspaceReport = async (req, res, next) => {
   try {
     const { workspaceId } = req.params;
 
+    const teams = await Team.find({ workspaceId, isArchived: false }).populate('leader', 'name avatarUrl');
     const rooms = await Room.find({ workspaceId, isArchived: false });
     const tasks = await Task.find({ workspaceId, isArchived: false }).populate(
       'assignedTo',
@@ -96,11 +99,33 @@ export const getWorkspaceReport = async (req, res, next) => {
       (t) => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== 'Completed'
     ).length;
 
+    // Team-wise performance breakdown
+    const teamPerformance = await Promise.all(
+      teams.map(async (team) => {
+        const teamTasks = tasks.filter((t) => String(t.teamId) === String(team._id));
+        const teamCompleted = teamTasks.filter((t) => t.status === 'Completed').length;
+        const memberCount = await TeamMember.countDocuments({ teamId: team._id });
+        const roomCount = rooms.filter((r) => String(r.teamId) === String(team._id)).length;
+        return {
+          id: team._id,
+          name: team.name,
+          leader: team.leader,
+          memberCount,
+          roomCount,
+          total: teamTasks.length,
+          completed: teamCompleted,
+          pending: teamTasks.length - teamCompleted,
+          rate: teamTasks.length > 0 ? Math.round((teamCompleted / teamTasks.length) * 100) : 0,
+        };
+      })
+    );
+
     // Room-wise performance breakdown
     const roomPerformance = rooms.map((room) => {
       const roomTasks = tasks.filter((t) => String(t.roomId) === String(room._id));
       const roomCompleted = roomTasks.filter((t) => t.status === 'Completed').length;
       return {
+        id: room._id,
         name: room.name,
         total: roomTasks.length,
         completed: roomCompleted,
@@ -125,12 +150,14 @@ export const getWorkspaceReport = async (req, res, next) => {
 
     return ApiResponse.success(res, {
       kpi: {
+        totalTeams: teams.length,
         totalRooms: rooms.length,
         totalTasks,
         completedTasks,
         overdueTasks,
         overallProgress: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
       },
+      teamPerformance,
       roomPerformance,
       statusDistribution,
       milestones,

@@ -1,11 +1,14 @@
 import { DailyPlan } from '../models/DailyPlan.js';
 import { RoomMember } from '../models/RoomMember.js';
+import { TeamMember } from '../models/TeamMember.js';
+import { Team } from '../models/Team.js';
+import { WorkspaceMember } from '../models/WorkspaceMember.js';
 import { ApiError } from '../utils/apiError.js';
 import { ApiResponse } from '../utils/apiResponse.js';
 
 export const saveDailyPlan = async (req, res, next) => {
   try {
-    const { date, organizationId, workspaceId, roomId, todayWork, tomorrowPlan } = req.body;
+    const { date, organizationId, workspaceId, teamId, roomId, todayWork, tomorrowPlan } = req.body;
     const userId = req.user._id;
 
     const plan = await DailyPlan.findOneAndUpdate(
@@ -14,6 +17,7 @@ export const saveDailyPlan = async (req, res, next) => {
         userId,
         organizationId,
         workspaceId: workspaceId || null,
+        teamId: teamId || null,
         roomId: roomId || null,
         date,
         todayWork,
@@ -72,6 +76,109 @@ export const getRoomDailyPlans = async (req, res, next) => {
     });
 
     return ApiResponse.success(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTeamDailyPlans = async (req, res, next) => {
+  try {
+    const { teamId } = req.params;
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+
+    const teamMembers = await TeamMember.find({ teamId }).populate(
+      'userId',
+      'name email avatarUrl title'
+    );
+
+    const userIds = teamMembers.map((m) => m.userId?._id).filter(Boolean);
+
+    const plans = await DailyPlan.find({
+      userId: { $in: userIds },
+      date,
+    }).populate('userId', 'name email avatarUrl title');
+
+    const result = teamMembers.map((m) => {
+      const userPlan = plans.find((p) => String(p.userId?._id) === String(m.userId?._id));
+      return {
+        member: m.userId,
+        role: m.role,
+        hasSubmitted: !!userPlan,
+        plan: userPlan || null,
+      };
+    });
+
+    return ApiResponse.success(res, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getWorkspaceDailySummary = async (req, res, next) => {
+  try {
+    const { workspaceId } = req.params;
+    const date = req.query.date || new Date().toISOString().split('T')[0];
+
+    const teams = await Team.find({ workspaceId, isArchived: false });
+    const teamSummaries = await Promise.all(
+      teams.map(async (team) => {
+        const teamMembers = await TeamMember.find({ teamId: team._id }).populate(
+          'userId',
+          'name email avatarUrl title'
+        );
+        const userIds = teamMembers.map((m) => m.userId?._id).filter(Boolean);
+
+        const plans = await DailyPlan.find({
+          userId: { $in: userIds },
+          date,
+        }).populate('userId', 'name email avatarUrl title');
+
+        const blockers = plans
+          .filter((p) => p.todayWork?.blockers && p.todayWork.blockers.trim().length > 0)
+          .map((p) => ({
+            user: p.userId,
+            blocker: p.todayWork.blockers,
+          }));
+
+        return {
+          teamId: team._id,
+          teamName: team.name,
+          totalMembers: teamMembers.length,
+          submittedCount: plans.length,
+          submissionRate:
+            teamMembers.length > 0
+              ? Math.round((plans.length / teamMembers.length) * 100)
+              : 0,
+          blockers,
+        };
+      })
+    );
+
+    // Total workspace metrics
+    const totalWorkspaceMembers = await WorkspaceMember.countDocuments({ workspaceId });
+    const allWorkspacePlans = await DailyPlan.find({ workspaceId, date }).populate(
+      'userId',
+      'name avatarUrl title'
+    );
+
+    const allBlockers = allWorkspacePlans
+      .filter((p) => p.todayWork?.blockers && p.todayWork.blockers.trim().length > 0)
+      .map((p) => ({
+        user: p.userId,
+        blocker: p.todayWork.blockers,
+      }));
+
+    return ApiResponse.success(res, {
+      date,
+      totalWorkspaceMembers,
+      totalSubmitted: allWorkspacePlans.length,
+      overallSubmissionRate:
+        totalWorkspaceMembers > 0
+          ? Math.round((allWorkspacePlans.length / totalWorkspaceMembers) * 100)
+          : 0,
+      teamSummaries,
+      allBlockers,
+    });
   } catch (error) {
     next(error);
   }

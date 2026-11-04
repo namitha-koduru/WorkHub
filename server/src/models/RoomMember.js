@@ -9,6 +9,12 @@ const roomMemberSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    teamId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Team',
+      required: true,
+      index: true,
+    },
     workspaceId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Workspace',
@@ -40,4 +46,3 @@ const roomMemberSchema = new mongoose.Schema(
 roomMemberSchema.index({ roomId: 1, userId: 1 }, { unique: true });
 
 export const RoomMember = mongoose.model('RoomMember', roomMemberSchema);
-
