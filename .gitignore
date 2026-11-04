@@ -21,6 +21,11 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# Database data
+server/data/
+*.lock
+
+
 # OS and Editor
 .DS_Store
 Thumbs.db

@@ -7,21 +7,22 @@ WorkHub is an enterprise-grade collaborative workflow, project organization, and
 ## 🏛 System Architecture & Hierarchy
 
 ```
-Organization
-    └── Workspaces (e.g. Vignan Mahotsav 2027, Tech Symposium)
-            └── Rooms (e.g. PR, Hospitality, Logistics, Tech Team)
-                    ├── Tasks & Checkpoints
-                    ├── Schedules & Milestones (FullCalendar)
-                    ├── Daily Work Plans
-                    ├── Discussions & Suggestions
-                    └── Approvals & Audit Activity
+Organization (Vignan Operations Management)
+    └── Workspaces (e.g. Vignan Mahotsav 2027, Technical Symposium)
+            └── Rooms (e.g. Technical Team, Public Relations, Hospitality & Logistics)
+                    ├── Tasks & Checkpoints (Kanban Drag & Drop with 5 Statuses)
+                    ├── Schedules & Milestones (FullCalendar Multi-Scope Engine)
+                    ├── Daily Work Standups (Today accomplishments, WIP, blockers & Tomorrow plan)
+                    ├── Discussions & Suggestions (Forum thread, Accept/Reject review workflow)
+                    ├── Review & Approval Pipeline (To Do → In Progress → Under Review → Completed)
+                    └── Real-time Notifications & Audit Activity Trails (Socket.IO)
 ```
 
-### Roles & RBAC:
-1. **Organization Owner**: Full governance, billing, workspaces, member management.
-2. **Organization Admin**: Workspace provisioning, invitations, administrative access.
-3. **Workspace Manager**: Workspace scope management, room creation, workspace reports.
-4. **Room Leader**: Room task assignment, approval reviews, room plans, calendar.
+### 5-Tier RBAC Role Hierarchy:
+1. **Organization Owner**: Complete governance, billing, workspace creation, member management.
+2. **Organization Admin**: Workspace provisioning, administrative invitations, staff oversight.
+3. **Workspace Manager**: Workspace scope management, room creation, aggregated workspace reports.
+4. **Room Leader**: Department task assignment, approval reviews, room plans, calendar.
 5. **Team Member**: Assigned task execution, review requests, daily plan submission.
 
 ---
@@ -30,82 +31,109 @@ Organization
 
 ```
 WorkHub/
-├── client/                      # Frontend SPA (React 18, Vite, Tailwind CSS)
+├── client/                              # Frontend React application (Vite 6, Tailwind CSS)
 │   ├── src/
-│   │   ├── api/                 # Axios client with interceptors
-│   │   ├── components/          # Reusable UI component library
-│   │   ├── context/             # AuthContext, SocketContext
-│   │   ├── pages/               # Dashboards, Workspaces, Rooms, Kanban, Calendar
-│   │   └── App.jsx              # Routing & Providers
-│   ├── tailwind.config.js       # Modern SaaS slate/indigo palette
-│   └── vite.config.js           # Dev server with proxy to backend
+│   │   ├── api/                         # Axios client with interceptors for all 14 modules
+│   │   ├── components/                  # Reusable UI component library
+│   │   │   ├── common/                  # Button, Modal, Badge, Avatar, EmptyState
+│   │   │   ├── layout/                  # Sidebar, Header, NotificationDropdown
+│   │   │   └── modals/                  # TaskModal, ScheduleModal, RoomModal, MemberModal, ApprovalModal
+│   │   ├── context/                     # AuthContext, SocketContext
+│   │   ├── layouts/                     # AppLayout, WorkspaceLayout, RoomLayout
+│   │   └── pages/                       # 18 Integrated Production Pages
+│   │       ├── auth/                    # Login (with 1-click Demo buttons), Register
+│   │       ├── dashboard/               # PersonalDashboard with Recharts visualizers
+│   │       ├── tasks/                   # MyTasksPage (Personal cross-workspace tasks)
+│   │       ├── calendar/                # PersonalCalendarPage (FullCalendar)
+│   │       ├── planner/                 # DailyPlannerPage (Today/Tomorrow plans & history)
+│   │       ├── workspaces/              # Directory, Overview, Calendar, Reports, Members
+│   │       ├── rooms/                   # 8 Dedicated Tabs (Overview, Board, List, Calendar, Milestones, Plans, Discussions, Activity)
+│   │       └── settings/                # ProfileSettingsPage, OrgSettingsPage
+│   ├── tailwind.config.js               # Indigo brand palette, statuses & priorities
+│   └── vite.config.js                   # Proxy forwarding /api & /socket.io to :5000
 │
-├── server/                      # Backend REST API (Node.js, Express, Socket.IO)
+├── server/                              # Backend REST API (Node.js, Express, Socket.IO)
 │   ├── src/
-│   │   ├── config/              # DB connection, Socket.IO, Env loader
-│   │   ├── middleware/          # Auth, RBAC, Zod validation, Error handler
-│   │   ├── models/              # 17 Normalized Mongoose collections
-│   │   ├── routes/              # Modular REST endpoints under /api/v1
-│   │   ├── services/            # Notifications, Activity logging, Realtime
-│   │   └── index.js             # HTTP server bootstrap
-│   └── package.json
+│   │   ├── config/                      # MongoDB connection, Socket.IO, Env loader
+│   │   ├── constants/                   # Roles, TaskStatuses, Priorities, ActivityTypes
+│   │   ├── controllers/                 # 15 Modular REST controllers
+│   │   ├── middleware/                  # Auth (JWT & HttpOnly), 5-Tier RBAC, Zod validation, ErrorHandler
+│   │   ├── models/                      # 17 Normalized Mongoose collections
+│   │   ├── routes/                      # Modular REST endpoints mounted under /api/v1
+│   │   ├── services/                    # Socket, Notification, Activity logging services
+│   │   ├── utils/                       # ApiResponse, ApiError, Seed dataset generator
+│   │   └── index.js                     # HTTP Server entry & graceful shutdown
+│   └── test/                            # Integration test suite (Node test runner)
 │
-└── package.json                 # Monorepo orchestration scripts
+└── package.json                         # Root orchestration scripts
 ```
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Quick Start Guide
 
-### Prerequisites
+### 1. Prerequisites
 - Node.js >= 18.x
-- MongoDB (Local instance or MongoDB Atlas URI)
+- MongoDB (Running locally on `127.0.0.1:27017` or configured via `MONGODB_URI` in `server/.env`)
 
-### Installation
+### 2. Installation
 ```bash
 # Install root, client, and server dependencies
 npm run install:all
 ```
 
-### Environment Configuration
-1. Configure `server/.env`:
-```env
-PORT=5000
-NODE_ENV=development
-MONGODB_URI=mongodb://127.0.0.1:27017/workhub
-JWT_SECRET=your_jwt_secret_here
-CLIENT_URL=http://localhost:5173
-```
-
-2. Configure `client/.env`:
-```env
-VITE_API_URL=/api/v1
-VITE_SOCKET_URL=/
-```
-
-### Running the Application
+### 3. Database Seeding (Pre-populated Operational Demo)
 ```bash
-# Run both Backend API and Vite Frontend concurrently
+# Seed rich demo data (Vignan Mahotsav 2027, Tech Team, PR, realistic tasks, schedules, plans)
+npm --prefix server run seed
+```
+
+### 4. Running Development Servers
+```bash
+# Run both Backend API (:5000) and Vite Frontend (:5173) concurrently:
 npm run dev
 
-# Or run separately:
-npm run dev:server     # Runs Express server with nodemon on http://localhost:5000
-npm run dev:client     # Runs Vite React client on http://localhost:5173
+# Or run backend and frontend in separate terminals:
+npm run dev:server     # Runs Express with nodemon
+npm run dev:client     # Runs Vite React development server
+```
+
+### 5. Running Integration Tests
+```bash
+# Run automated backend test suite
+node --test server/test/api.test.js
 ```
 
 ---
 
-## 📑 Phased Execution Plan
+## 🔑 Pre-Configured Demo Credentials
 
-- [x] **Phase 1**: Requirements, Architecture & Project Setup
-- [ ] **Phase 2**: Database Models & Authentication (JWT, HttpOnly cookies, RBAC base)
-- [ ] **Phase 3**: Organization & Membership Management
-- [ ] **Phase 4**: Workspace Management
-- [ ] **Phase 5**: Room Management
-- [ ] **Phase 6**: Task Management & Drag-and-Drop Kanban Board
-- [ ] **Phase 7**: FullCalendar & Scheduling Engine
-- [ ] **Phase 8**: Daily Work Planner & Milestones
-- [ ] **Phase 9**: Discussions, Suggestions & Review Approval Workflows
-- [ ] **Phase 10**: Real-Time Socket.IO Notifications & Activity History
-- [ ] **Phase 11**: Dashboards & Analytics (Recharts)
-- [ ] **Phase 12**: Verification, Testing, Seed Data & Production Deployment
+The platform includes convenient **One-Click Demo Login** buttons on the `/login` page:
+
+| Role | Name | Email | Password | Scope & Permissions |
+|---|---|---|---|---|
+| **Org Owner** | Dr. Ramesh Kumar | `admin@workhub.com` | `Password123!` | Full governance, org settings, all workspaces |
+| **Workspace Manager** | Priya Sharma | `manager@workhub.com` | `Password123!` | Vignan Mahotsav 2027 manager, room provisioning |
+| **Room Leader** | Aditya Verma | `leader@workhub.com` | `Password123!` | Technical Team Leader, task review & approvals |
+| **Team Member** | Sneha Patel | `member1@workhub.com` | `Password123!` | Technical Team Engineer, assigned tasks & standups |
+| **Team Member** | Vikram Singh | `member2@workhub.com` | `Password123!` | Hospitality Lead & Coordinator |
+
+---
+
+## 📡 REST API Specification Summary (`/api/v1`)
+
+- `POST /api/v1/auth/login` – JWT authentication issuing HttpOnly cookie & token.
+- `POST /api/v1/auth/register` – Registration with auto-provisioned organization.
+- `GET  /api/v1/auth/me` – Current session, active organization, and roles.
+- `GET  /api/v1/workspaces?orgId=...` – List accessible workspaces with progress metrics.
+- `GET  /api/v1/rooms?workspaceId=...` – List room departments with leader and task counts.
+- `GET  /api/v1/tasks?roomId=...` – Filterable room tasks with checkpoint status.
+- `PATCH /api/v1/tasks/:id/status` – Drag-and-drop Kanban status update.
+- `GET  /api/v1/schedules/personal` – Multi-scope FullCalendar aggregation (meetings + deadlines).
+- `POST /api/v1/daily-plans` – Record today's work (planned, WIP, completed, blockers) and tomorrow's plan.
+- `GET  /api/v1/daily-plans/room/:roomId` – Leader inspection of member daily standups.
+- `POST /api/v1/approvals/submit` – Task review submission (To Do/In Progress → Under Review).
+- `POST /api/v1/approvals/:id/decide` – Leader decision (Approve to Completed or Request Changes).
+- `GET  /api/v1/reports/personal` – Personal analytics (Recharts status and priority distribution).
+- `GET  /api/v1/reports/workspace/:id` – Workspace room comparative velocity and milestones.
+- `GET  /api/v1/notifications` – Real-time notification stream with unread counter.

@@ -3,15 +3,26 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
 import { ENV } from './config/env.js';
 import { ApiError } from './utils/apiError.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import apiRouter from './routes/index.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientDistPath = path.resolve(__dirname, '../../client/dist');
+
 const app = express();
 
-// Security middleware
-app.use(helmet());
+// Security middleware (configured to allow inline styles/scripts if serving frontend)
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+  })
+);
 
 // CORS configuration supporting credentials (HttpOnly cookies)
 app.use(
@@ -41,7 +52,18 @@ app.get('/health', (req, res) => {
 // Mount modular API v1
 app.use('/api/v1', apiRouter);
 
-// Catch-all 404 handler
+// Serve frontend static assets if built
+if (fs.existsSync(clientDistPath)) {
+  app.use(express.static(clientDistPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(clientDistPath, 'index.html'));
+  });
+}
+
+// Catch-all 404 handler for API routes
 app.use((req, res, next) => {
   next(ApiError.notFound(`Route not found: [${req.method}] ${req.originalUrl}`));
 });
