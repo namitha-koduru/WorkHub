@@ -21,7 +21,6 @@
     "mongoose": "^8.9.5",
     "morgan": "^1.10.0",
     "socket.io": "^4.8.1",
-    "workhub-root": "file:..",
     "zod": "^3.24.1"
   },
   "devDependencies": {
