@@ -22,6 +22,7 @@ export function ScheduleModal({ isOpen, onClose, organizationId, workspaceId, ro
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['personal-calendar'] });
       queryClient.invalidateQueries({ queryKey: ['workspace-calendar'] });
+      queryClient.invalidateQueries({ queryKey: ['team-calendar'] });
       queryClient.invalidateQueries({ queryKey: ['room-calendar'] });
       onClose();
     },

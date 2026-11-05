@@ -15,6 +15,51 @@ function populateUser(store, userId) {
   return safeUser;
 }
 
+// Normalizer ensuring FullCalendar receives standard start, end, allDay, and theme colors
+function formatCalendarEvent(item) {
+  const isTask = item.type === 'TASK_DEADLINE' || item.type === 'TASK' || !!item.task;
+  const isMilestone = item.type === 'MILESTONE' || item.scheduleType === 'MILESTONE';
+  const isMeeting = item.type === 'MEETING';
+  const isActivity = item.type === 'ACTIVITY';
+
+  let color = '#4f46e5'; // indigo for meetings
+  if (isTask) color = '#e11d48'; // rose-600 for task deadlines
+  else if (isMilestone) color = '#d97706'; // amber-600 for milestones
+  else if (isActivity) color = '#059669'; // emerald-600 for activities
+  else if (item.type === 'REMINDER') color = '#0284c7'; // sky-600
+
+  const rawStart = item.start || item.startTime || item.dueDate || item.date || new Date().toISOString();
+  const rawEnd = item.end || item.endTime || rawStart;
+  const allDay = item.allDay !== undefined ? item.allDay : (item.isAllDay || isTask || isMilestone);
+
+  return {
+    ...item,
+    id: item._id || item.id || 'evt-' + Math.random().toString(36).substring(2, 7),
+    _id: item._id || item.id,
+    title: item.title,
+    start: rawStart,
+    end: rawEnd,
+    startTime: rawStart,
+    endTime: rawEnd,
+    allDay: !!allDay,
+    isAllDay: !!allDay,
+    backgroundColor: color,
+    borderColor: color,
+    textColor: '#ffffff',
+    type: isTask ? 'TASK' : isMilestone ? 'MILESTONE' : 'SCHEDULE',
+    scheduleType: item.type || (isTask ? 'TASK' : 'MEETING'),
+    extendedProps: {
+      ...item,
+      description: item.description || '',
+      location: item.location || '',
+      type: item.type,
+      scheduleType: item.type,
+      participants: item.participants || [],
+      task: item.task || null,
+    },
+  };
+}
+
 // Router for all API requests
 async function mockHandleRequest(method, url, data) {
   // Artificial mini delay (40ms) for realistic UX transitions
@@ -493,11 +538,14 @@ async function mockHandleRequest(method, url, data) {
   const wsCalMatch = cleanPath.match(/^\/workspaces\/([^/]+)\/calendar$/);
   if (wsCalMatch) {
     const wsId = wsCalMatch[1];
-    const scheds = store.schedules.filter((s) => s.workspaceId === wsId);
+    const scheds = store.schedules
+      .filter((s) => !s.workspaceId || s.workspaceId === wsId)
+      .map(formatCalendarEvent);
     const tasks = store.tasks
-      .filter((t) => t.workspaceId === wsId && t.dueDate)
-      .map((t) => ({
+      .filter((t) => (!wsId || t.workspaceId === wsId) && t.dueDate)
+      .map((t) => formatCalendarEvent({
         _id: 'cal-task-' + t._id,
+        id: 'cal-task-' + t._id,
         title: `Task Deadline: ${t.title}`,
         startTime: t.dueDate,
         endTime: t.dueDate,
@@ -610,11 +658,15 @@ async function mockHandleRequest(method, url, data) {
   const teamCalMatch = cleanPath.match(/^\/teams\/([^/]+)\/calendar$/);
   if (teamCalMatch) {
     const teamId = teamCalMatch[1];
-    const scheds = store.schedules.filter((s) => s.teamId === teamId);
+    const teamRoomIds = store.rooms.filter((r) => r.teamId === teamId).map((r) => r._id);
+    const scheds = store.schedules
+      .filter((s) => s.teamId === teamId || (s.roomId && teamRoomIds.includes(s.roomId)))
+      .map(formatCalendarEvent);
     const tasks = store.tasks
-      .filter((t) => t.teamId === teamId && t.dueDate)
-      .map((t) => ({
+      .filter((t) => (t.teamId === teamId || (t.roomId && teamRoomIds.includes(t.roomId))) && t.dueDate)
+      .map((t) => formatCalendarEvent({
         _id: 'cal-task-' + t._id,
+        id: 'cal-task-' + t._id,
         title: `Task Deadline: ${t.title}`,
         startTime: t.dueDate,
         endTime: t.dueDate,
@@ -730,11 +782,14 @@ async function mockHandleRequest(method, url, data) {
   const roomCalMatch = cleanPath.match(/^\/rooms\/([^/]+)\/calendar$/);
   if (roomCalMatch) {
     const roomId = roomCalMatch[1];
-    const scheds = store.schedules.filter((s) => s.roomId === roomId);
+    const scheds = store.schedules
+      .filter((s) => s.roomId === roomId)
+      .map(formatCalendarEvent);
     const tasks = store.tasks
       .filter((t) => t.roomId === roomId && t.dueDate)
-      .map((t) => ({
+      .map((t) => formatCalendarEvent({
         _id: 'cal-task-' + t._id,
+        id: 'cal-task-' + t._id,
         title: `Task Deadline: ${t.title}`,
         startTime: t.dueDate,
         endTime: t.dueDate,
@@ -927,15 +982,20 @@ async function mockHandleRequest(method, url, data) {
   }
 
   if (cleanPath === '/schedules/personal') {
-    const myScheds = store.schedules.filter(
-      (s) =>
-        s.createdBy === currentUserId ||
-        (s.participants && s.participants.includes(currentUserId))
-    );
+    const myScheds = store.schedules
+      .filter(
+        (s) =>
+          !s.participants ||
+          s.participants.length === 0 ||
+          s.createdBy === currentUserId ||
+          s.participants.includes(currentUserId)
+      )
+      .map(formatCalendarEvent);
     const myTasks = store.tasks
-      .filter((t) => t.assignedTo === currentUserId && t.dueDate)
-      .map((t) => ({
+      .filter((t) => (!t.assignedTo || t.assignedTo === currentUserId || (t.collaborators && t.collaborators.includes(currentUserId))) && t.dueDate)
+      .map((t) => formatCalendarEvent({
         _id: 'cal-task-' + t._id,
+        id: 'cal-task-' + t._id,
         title: `Task Deadline: ${t.title}`,
         startTime: t.dueDate,
         endTime: t.dueDate,

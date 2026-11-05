@@ -24,17 +24,29 @@
   background: #94a3b8;
 }
 
-/* Custom styles for FullCalendar integration */
+/* Professional FullCalendar Styles */
 .fc {
   font-family: inherit;
 }
 .fc-header-toolbar {
-  margin-bottom: 1rem !important;
+  margin-bottom: 1.25rem !important;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
 .fc-toolbar-title {
-  font-size: 1.125rem !important;
+  font-size: 1.15rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.025em;
+}
+.fc .fc-button {
+  padding: 0.4rem 0.8rem !important;
+  font-size: 0.8125rem !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  border-radius: 0.6rem !important;
+  text-transform: capitalize !important;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  transition: all 0.15s ease-in-out;
 }
 .fc-button-primary {
   background-color: #4f46e5 !important;
@@ -47,4 +59,48 @@
 .fc-button-primary:disabled {
   background-color: #94a3b8 !important;
   border-color: #94a3b8 !important;
+  opacity: 0.6;
+}
+.fc-theme-standard td, .fc-theme-standard th {
+  border-color: #f1f5f9 !important;
+}
+.fc-col-header-cell {
+  background-color: #f8fafc;
+  padding: 10px 0 !important;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e2e8f0 !important;
+}
+.fc-daygrid-day-number {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #334155;
+  padding: 6px 8px !important;
+}
+.fc-day-today {
+  background-color: #f5f3ff !important;
+}
+.fc-day-today .fc-daygrid-day-number {
+  color: #4f46e5 !important;
+  font-weight: 800 !important;
+}
+.fc-event {
+  border-radius: 0.45rem !important;
+  padding: 2px 6px !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  cursor: pointer;
+  border: none !important;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08);
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+.fc-event:hover {
+  filter: brightness(0.92);
+  transform: translateY(-1px);
+}
+.fc-daygrid-event-dot {
+  display: none !important;
 }
