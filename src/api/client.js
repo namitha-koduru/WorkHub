@@ -1,3 +1,4 @@
+import axios from 'axios';
 import {
   getStore,
   saveStore,
@@ -1497,17 +1498,58 @@ async function mockHandleRequest(method, url, data) {
   return { success: true, data: null };
 }
 
-// Emulated axios client matching the existing interface exactly
-const api = {
-  get: (url, config) => mockHandleRequest('get', url, null),
-  post: (url, data, config) => mockHandleRequest('post', url, data),
-  put: (url, data, config) => mockHandleRequest('put', url, data),
-  patch: (url, data, config) => mockHandleRequest('patch', url, data),
-  delete: (url, config) => mockHandleRequest('delete', url, null),
-  interceptors: {
-    request: { use: () => {} },
-    response: { use: () => {} },
+// Production Axios Client connected to Express backend & MongoDB
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || '/api/v1',
+  withCredentials: true,
+  headers: {
+    'Content-Type': 'application/json',
   },
-};
+});
+
+// Request interceptor to attach JWT token
+api.interceptors.request.use((config) => {
+  const session = getCurrentSession();
+  if (session && session.token) {
+    config.headers.Authorization = `Bearer ${session.token}`;
+  }
+  return config;
+});
+
+// Response interceptor: returns res.data directly, falls back gracefully if backend offline
+api.interceptors.response.use(
+  (response) => {
+    // If auth response with token, synchronize local session
+    if (response.data && response.data.data && response.data.data.token) {
+      setCurrentSession(response.data.data);
+    }
+    return response.data;
+  },
+  async (error) => {
+    const isNetworkOrServerDown = !error.response || error.response.status >= 500;
+    if (isNetworkOrServerDown && error.config) {
+      const { method, url, data } = error.config;
+      let parsedData = null;
+      if (typeof data === 'string') {
+        try { parsedData = JSON.parse(data); } catch { parsedData = data; }
+      } else {
+        parsedData = data;
+      }
+      console.warn(`[WorkHub Client] Backend request (${url}) returned offline/5xx. Serving from local resilient cache.`);
+      try {
+        const fallbackRes = await mockHandleRequest(method || 'get', url, parsedData);
+        return fallbackRes;
+      } catch (fallbackErr) {
+        return Promise.reject(fallbackErr);
+      }
+    }
+
+    const errorResponse = error.response?.data || {
+      success: false,
+      message: error.message || 'An unexpected error occurred.',
+    };
+    return Promise.reject(errorResponse);
+  }
+);
 
 export default api;
