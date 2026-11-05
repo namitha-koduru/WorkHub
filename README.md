@@ -421,8 +421,8 @@ All screenshots below represent actual screen captures from the running applicat
 |---|---|---|---|
 | **1. GitHub Repository** | `https://github.com/namitha-koduru/WorkHub.git` | Git Repository (`main` branch) | **Synchronized & Clean** |
 | **2. Project Documentation** | [`docs/WorkHub_Project_Report.pdf`](docs/WorkHub_Project_Report.pdf) | 18-Chapter Comprehensive PDF (2.9 MB) | **Generated & Verified** |
-| **3. Final Presentation** | [`docs/WorkHub_Final_Presentation.pptx`](docs/WorkHub.pptx) | 21-Slide Professional PowerPoint (2.9 MB) | **Generated & Verified** |
-| **4. Cloud Live Deployment** | Configured for Vercel + Render + Atlas | Cloud Production Deployment | **Production Ready** |
+| **3. Final Presentation** | [`docs/WorkHub.pptx`](docs/WorkHub.pptx) | 21-Slide Professional PowerPoint (2.9 MB) | **Generated & Verified** |
+| **4. Cloud Live Deployment** |  [`live_deploymet`](https://workhub-bbjw.onrender.com)| Cloud Production Deployment | **Production Ready** |
 
 ---
 
