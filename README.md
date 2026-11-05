@@ -1,7 +1,7 @@
 # WorkHub – Team Workflow & Event Operations Management System
 
 > **Final Capstone Project Submission**  
-> **Architecture:** Full-Stack MERN (MongoDB, Express.js, React 18 with Vite, Node.js with Socket.IO) • **Zero AI Dependencies**  
+> **Architecture:** React 18 SPA (Vite, Tailwind CSS, TanStack Query, Recharts, FullCalendar) with Persistent LocalStorage Data Engine • **Zero AI Dependencies**  
 > **Repository:** [https://github.com/namitha-koduru/WorkHub.git](https://github.com/namitha-koduru/WorkHub.git)  
 > **Official Deliverables:** Project Documentation PDF (`docs/WorkHub_Project_Report.pdf`) • Capstone Presentation PPTX (`docs/WorkHub_Final_Presentation.pptx`) • Cloud Live Deployment
 

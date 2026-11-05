@@ -1,0 +1,9 @@
+{
+  "name": "WorkHub – Team Workflow & Event Operations Management System",
+  "description": "Collaborative enterprise platform for team workflow, multi-tier event operations, room kanban boards, daily standup blocker triaging, and role-based access governance.",
+  "prompt": "WorkHub – Team Workflow & Event Operations Management System",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
