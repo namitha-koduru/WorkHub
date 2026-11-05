@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { authApi } from '../../api/auth.api';
 import { Button } from '../../components/common/Button';
-import { LogIn, AlertCircle, Shield, Sparkles, UserCheck } from 'lucide-react';
+import { LogIn, AlertCircle, Sparkles } from 'lucide-react';
 
 const DEMO_USERS = [
   {
@@ -11,7 +11,6 @@ const DEMO_USERS = [
     roleTag: 'Org Owner',
     email: 'admin@workhub.com',
     name: 'Dr. Ramesh Kumar',
-    memberId: 'WH-ADM001',
     color: 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100',
   },
   {
@@ -19,7 +18,6 @@ const DEMO_USERS = [
     roleTag: 'Workspace Manager',
     email: 'manager@workhub.com',
     name: 'Priya Sharma',
-    memberId: 'WH-MGR002',
     color: 'bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100',
   },
   {
@@ -27,7 +25,6 @@ const DEMO_USERS = [
     roleTag: 'Team Lead',
     email: 'leader@workhub.com',
     name: 'Aditya Verma',
-    memberId: 'WH-TLD003',
     color: 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100',
   },
   {
@@ -35,7 +32,6 @@ const DEMO_USERS = [
     roleTag: 'Room Member',
     email: 'member1@workhub.com',
     name: 'Sneha Patel',
-    memberId: 'WH-DEV004',
     color: 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100',
   },
 ];
