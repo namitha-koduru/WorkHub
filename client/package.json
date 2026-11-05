@@ -1,0 +1,9 @@
+{
+  "name": "workhub-client",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "npm --prefix .. run build",
+    "dev": "npm --prefix .. run dev"
+  }
+}
